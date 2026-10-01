@@ -335,7 +335,7 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | POST `/payments/online` | cliente | Opcional: cobra con Culqi el monto decidido por el servidor y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |
 
-Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `ALREADY_DELIVERED`, `FORBIDDEN`, `VALIDATION_ERROR`.
+Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
 
 ## 7. Flujo crítico: QR y cobro
 

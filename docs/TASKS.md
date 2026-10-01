@@ -10,7 +10,7 @@ Cómo usar este archivo:
 
 - [x] **T0.1 Repositorio y workspaces.** Crear `qrcheckout/` con Git, `.gitignore` (incluye `.env`, `node_modules`), `package.json` con workspaces `frontend` y `backend`, y los scripts `dev:api`, `dev:web`, `test`, `db:migrate`, `db:seed`.
   *Hecho cuando:* `npm install` funciona en la raíz y los scripts existen (aunque aún no hagan todo).
-- [ ] **T0.2 Backend base.** Express con TypeScript, `config/env.ts` que valida variables con Zod, `helmet`, `cors`, manejador de errores con el formato de `ARCHITECTURE.md` §6, y `GET /api/health`.
+- [x] **T0.2 Backend base.** Express con TypeScript, `config/env.ts` que valida variables con Zod, `helmet`, `cors`, manejador de errores con el formato de `ARCHITECTURE.md` §6, y `GET /api/health`.
   *Hecho cuando:* `npm run dev:api` responde `{ "data": { "status": "ok" } }` y falla con un mensaje claro si falta una variable.
 - [ ] **T0.3 Frontend base.** Vite + React + TypeScript + Tailwind, React Router con una página de inicio, tokens de `DESIGN.md` §2 y fuente Archivo.
   *Hecho cuando:* la página abre en `https://localhost:5173` con `@vitejs/plugin-basic-ssl` y usa los colores y la fuente del diseño.
