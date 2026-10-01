@@ -12,9 +12,9 @@ Cómo usar este archivo:
   *Hecho cuando:* `npm install` funciona en la raíz y los scripts existen (aunque aún no hagan todo).
 - [x] **T0.2 Backend base.** Express con TypeScript, `config/env.ts` que valida variables con Zod, `helmet`, `cors`, manejador de errores con el formato de `ARCHITECTURE.md` §6, y `GET /api/health`.
   *Hecho cuando:* `npm run dev:api` responde `{ "data": { "status": "ok" } }` y falla con un mensaje claro si falta una variable.
-- [ ] **T0.3 Frontend base.** Vite + React + TypeScript + Tailwind, React Router con una página de inicio, tokens de `DESIGN.md` §2 y fuente Archivo.
+- [x] **T0.3 Frontend base.** Vite + React + TypeScript + Tailwind, React Router con una página de inicio, tokens de `DESIGN.md` §2 y fuente Archivo.
   *Hecho cuando:* la página abre en `https://localhost:5173` con `@vitejs/plugin-basic-ssl` y usa los colores y la fuente del diseño.
-- [ ] **T0.4 Proxy de la API.** Configurar en Vite el proxy de `/api` hacia `http://localhost:3000` y `server.allowedHosts` para el túnel. Crear `services/api.ts`.
+- [x] **T0.4 Proxy de la API.** Configurar en Vite el proxy de `/api` hacia `http://localhost:3000` y `server.allowedHosts` para el túnel. Crear `services/api.ts`.
   *Hecho cuando:* el frontend llama a `/api/health` y muestra el resultado.
 - [ ] **T0.5 Base de datos y Prisma.** Crear el esquema de `ARCHITECTURE.md` §5, la primera migración y `infrastructure/prisma.ts`. Crear `.env.example` en ambos paquetes.
   *Hecho cuando:* `npm run db:migrate` crea las tablas en MySQL.
