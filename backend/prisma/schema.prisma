@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  CASHIER
+  ADMIN
+}
+
+enum CartStatus {
+  OPEN
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CMR_CARD
+  OTHER_CARD
+  CASH
+  ONLINE
+}
+
+enum PriceType {
+  NORMAL
+  CMR
+}
+
+enum DocType {
+  TICKET
+  BOLETA
+  FACTURA
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  SELECT
+  BOOLEAN
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum CampaignScope {
+  PRODUCTS
+  CATEGORIES
+  STORE
+}
+
+model User {
+  id            Int               @id @default(autoincrement())
+  email         String            @unique
+  name          String
+  role          Role
+  googleId      String?           @unique
+  passwordHash  String?
+  active        Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  carts         Cart[]
+  cashierSales  Sale[]            @relation("CashierSales")
+  customerSales Sale[]            @relation("CustomerSales")
+  adjustments   StockAdjustment[]
+}
+
+model Category {
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  active    Boolean            @default(true)
+  fields    CategoryField[]
+  products  Product[]
+  campaigns CampaignCategory[]
+}
+
+model CategoryField {
+  id         Int       @id @default(autoincrement())
+  categoryId Int
+  category   Category  @relation(fields: [categoryId], references: [id])
+  key        String // identificador estable, no cambia después de crearse
+  label      String // texto visible en formularios y en la app del cliente
+  type       FieldType // tampoco cambia después de crearse
+  required   Boolean   @default(false)
+  options    Json? // lista de textos, solo si type = SELECT
+  unit       String? // por ejemplo "horas", solo si type = NUMBER
+  sortOrder  Int       @default(0)
+  active     Boolean   @default(true)
+
+  @@unique([categoryId, key])
+}
+
+model Campaign {
+  id            Int                @id @default(autoincrement())
+  name          String
+  scope         CampaignScope
+  discountType  DiscountType
+  discountValue Int // PERCENT: puntos básicos · FIXED: céntimos por unidad
+  priority      Int                @default(0) // mayor gana
+  startsAt      DateTime
+  endsAt        DateTime
+  active        Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  products      CampaignProduct[] // se usa si scope = PRODUCTS
+  categories    CampaignCategory[] // se usa si scope = CATEGORIES
+}
+
+model CampaignProduct {
+  campaignId Int
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+
+  @@id([campaignId, productId])
+}
+
+model CampaignCategory {
+  campaignId Int
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([campaignId, categoryId])
+}
+
+model Product {
+  id                 Int               @id @default(autoincrement())
+  barcode            String            @unique
+  name               String
+  brand              String
+  color              String?
+  categoryId         Int
+  category           Category          @relation(fields: [categoryId], references: [id])
+  originalPriceCents Int
+  hasCmrDiscount     Boolean           @default(false)
+  cmrDiscountBps     Int               @default(0)
+  attributes         Json? // valores de los campos de su categoría, por key
+  campaigns          CampaignProduct[]
+  stock              Int               @default(0)
+  maxPerPurchase     Int               @default(10)
+  imageUrl           String?
+  active             Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  cartItems          CartItem[]
+  saleItems          SaleItem[]
+  adjustments        StockAdjustment[]
+}
+
+model StockAdjustment {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  delta     Int
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Cart {
+  id          Int        @id @default(autoincrement())
+  customerId  Int
+  customer    User       @relation(fields: [customerId], references: [id])
+  status      CartStatus @default(OPEN)
+  qrCode      String?    @unique
+  qrExpiresAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  items       CartItem[]
+  sale        Sale?
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  cartId    Int
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@unique([cartId, productId])
+}
+
+model Sale {
+  id                 Int           @id @default(autoincrement())
+  code               String        @unique // el código del carrito (caja) u O-XXXXX (en línea)
+  receiptNumber      String        @unique // T001-000001, B001-000001, F001-000001
+  cartId             Int           @unique
+  cart               Cart          @relation(fields: [cartId], references: [id])
+  customerId         Int
+  customer           User          @relation("CustomerSales", fields: [customerId], references: [id])
+  cashierId          Int? // nulo si fue pago en línea
+  cashier            User?         @relation("CashierSales", fields: [cashierId], references: [id])
+  paymentMethod      PaymentMethod
+  priceApplied       PriceType
+  originalTotalCents Int // suma de precios originales
+  offerTotalCents    Int // total con campañas, sin CMR
+  cmrTotalCents      Int // total con CMR
+  totalCents         Int // lo realmente cobrado
+  docType            DocType       @default(TICKET)
+  buyerDocType       String?
+  buyerDocNumber     String?
+  buyerName          String?
+  buyerEmail         String?
+  cardBrand          String? // solo pagos en línea
+  cardLast4          String?
+  cardIssuer         String?
+  culqiChargeId      String?
+  deliveredAt        DateTime?
+  createdAt          DateTime      @default(now())
+  items              SaleItem[]
+}
+
+model SaleItem {
+  id                 Int     @id @default(autoincrement())
+  saleId             Int
+  sale               Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId          Int
+  product            Product @relation(fields: [productId], references: [id])
+  barcode            String
+  name               String
+  quantity           Int
+  originalPriceCents Int
+  normalPriceCents   Int
+  cmrPriceCents      Int
+  paidPriceCents     Int // precio unitario realmente cobrado
+  subtotalCents      Int // paidPriceCents × cantidad
+  campaignName       String?
+}
+
+model DocumentSeries {
+  series     String @id // T001, B001, F001
+  lastNumber Int    @default(0)
+}

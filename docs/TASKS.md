@@ -16,7 +16,7 @@ Cómo usar este archivo:
   *Hecho cuando:* la página abre en `https://localhost:5173` con `@vitejs/plugin-basic-ssl` y usa los colores y la fuente del diseño.
 - [x] **T0.4 Proxy de la API.** Configurar en Vite el proxy de `/api` hacia `http://localhost:3000` y `server.allowedHosts` para el túnel. Crear `services/api.ts`.
   *Hecho cuando:* el frontend llama a `/api/health` y muestra el resultado.
-- [ ] **T0.5 Base de datos y Prisma.** Crear el esquema de `ARCHITECTURE.md` §5, la primera migración y `infrastructure/prisma.ts`. Crear `.env.example` en ambos paquetes.
+- [x] **T0.5 Base de datos y Prisma.** Crear el esquema de `ARCHITECTURE.md` §5, la primera migración y `infrastructure/prisma.ts`. Crear `.env.example` en ambos paquetes.
   *Hecho cuando:* `npm run db:migrate` crea las tablas en MySQL.
 - [ ] **T0.6 Vitest.** Configurar Vitest en backend y frontend, y Supertest en el backend con `DATABASE_URL_TEST`.
   *Hecho cuando:* `npm run test` corre una prueba de ejemplo en cada paquete.

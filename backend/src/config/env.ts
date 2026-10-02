@@ -13,6 +13,9 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   FRONTEND_URL: z.string().url(),
+  DATABASE_URL: z.string().url().refine((value) => value.startsWith('mysql://'), {
+    message: 'Debe empezar con mysql://',
+  }),
 });
 
 const parsed = schema.safeParse(process.env);
