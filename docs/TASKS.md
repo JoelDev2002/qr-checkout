@@ -18,7 +18,7 @@ Cómo usar este archivo:
   *Hecho cuando:* el frontend llama a `/api/health` y muestra el resultado.
 - [x] **T0.5 Base de datos y Prisma.** Crear el esquema de `ARCHITECTURE.md` §5, la primera migración y `infrastructure/prisma.ts`. Crear `.env.example` en ambos paquetes.
   *Hecho cuando:* `npm run db:migrate` crea las tablas en MySQL.
-- [ ] **T0.6 Vitest.** Configurar Vitest en backend y frontend, y Supertest en el backend con `DATABASE_URL_TEST`.
+- [x] **T0.6 Vitest.** Configurar Vitest en backend y frontend, y Supertest en el backend con `DATABASE_URL_TEST`.
   *Hecho cuando:* `npm run test` corre una prueba de ejemplo en cada paquete.
 
 ## Sprint 1 — Catálogo, cuentas y escáner
