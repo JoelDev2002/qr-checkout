@@ -29,7 +29,7 @@ Cómo usar este archivo:
   *Hecho cuando:* hay pruebas para todos los casos listados en `ARCHITECTURE.md` §10 (por ejemplo, original 10000 con campaña de 3000 bps y CMR de 500 bps da oferta 7000 y CMR 6650; con monto fijo de 1500 da oferta 8500).
 - [x] **T1.3 Códigos de barras y de carrito.** `domain/barcode.ts`: validar EAN-13 (dígito verificador) y generar códigos internos con prefijo 200–299. `domain/cartCode.ts`: generar `C-XXXXX`.
   *Hecho cuando:* hay pruebas con códigos válidos e inválidos, y los internos generados pasan la validación.
-- [ ] **T1.4 Cuotas informativas.** `domain/installments.ts` según RN-10 y la configuración de `.env`.
+- [x] **T1.4 Cuotas informativas.** `domain/installments.ts` según RN-10 y la configuración de `.env`.
   *Hecho cuando:* pruebas con totales que no se dividen exactos (la primera cuota absorbe los céntimos) y con total por debajo del mínimo (sin cuotas).
 - [ ] **T1.5 Login de cajero y admin.** Módulo `auth` con `POST /auth/login`, bcrypt, JWT, `GET /auth/me` y middlewares de autenticación y roles.
   *Hecho cuando:* pruebas Supertest confirman que un cajero no accede a rutas de admin y que un token vencido o falso es rechazado.
