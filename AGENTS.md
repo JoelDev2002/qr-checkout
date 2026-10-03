@@ -18,6 +18,8 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 4. No añadir dependencias que no estén en `ARCHITECTURE.md` §1 sin preguntar.
 5. Al terminar: correr `npm run test`, marcar la tarea `[x]` y explicar en pocas líneas qué se hizo y cómo probarlo.
 6. No hacer cambios fuera de la tarea (ni "mejoras" de paso).
+7. Nunca ejecutes comandos interactivos. Usa siempre las opciones que evitan las preguntas (por ejemplo `prisma migrate dev --name nombre`). Si un comando no se puede ejecutar sin preguntas, detente y dime qué comando debo correr yo.
+8. Al terminar una tarea: corre las comprobaciones del "Hecho cuando", muestra la salida completa, lista los archivos cambiados con `git status` y espera mi aprobación antes de hacer commit. Nunca hagas commit sin que yo lo pida.
 
 ## Reglas que no se rompen
 1. **Dinero siempre en céntimos enteros.** Nunca `float`. Formatear solo al mostrar, con `lib/money.ts`.
