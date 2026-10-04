@@ -59,6 +59,11 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
   - `npm run test` — todas las pruebas
   - `npm run db:migrate` y `npm run db:seed` — base de datos
 - La cámara exige HTTPS; para probar en celular usar un túnel hacia el puerto 5173 (ver `ARCHITECTURE.md` §9).
+- Crea y edita archivos SOLO con la herramienta de escritura y edición de archivos. Prohibido crear o modificar archivos desde la consola: nada de here-strings (@" "@), echo, Set-Content, Out-File, cat, bash -c ni python -c. En PowerShell el símbolo $ y las comillas invertidas dañan el código.
+- Usa la consola solo para correr comandos (npm, npx, git).
+- Nunca guardes archivos de código con codificación ASCII. Conserva los acentos y la eñe.
+- No uses comandos de Linux en PowerShell (tail, cat, grep). Usa Select-Object, Get-Content o Select-String.
+- Si un comando o enfoque falla dos veces, detente y pregúntame. No pruebes rodeos.
 
 ## Fuera de alcance por ahora
 Imágenes de productos, importación masiva desde la interfaz, rol vendedor, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas reales de Saga.
