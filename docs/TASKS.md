@@ -33,7 +33,7 @@ Cómo usar este archivo:
   *Hecho cuando:* pruebas con totales que no se dividen exactos (la primera cuota absorbe los céntimos) y con total por debajo del mínimo (sin cuotas).
 - [x] **T1.5 Login de cajero y admin.** Módulo `auth` con `POST /auth/login`, bcrypt, JWT, `GET /auth/me` y middlewares de autenticación y roles.
   *Hecho cuando:* pruebas Supertest confirman que un cajero no accede a rutas de admin y que un token vencido o falso es rechazado.
-- [ ] **T1.6 Semilla inicial.** `prisma/seed.ts` que crea el admin inicial (desde variables de entorno).
+- [x] **T1.6 Semilla inicial.** `prisma/seed.ts` que crea el admin inicial (desde variables de entorno).
   *Hecho cuando:* `npm run db:seed` se puede ejecutar más de una vez sin duplicar datos.
 - [ ] **T1.7 Login con Google.** `POST /auth/google` (verifica el token, crea o busca al cliente) y botón en el frontend. Añadir `POST /auth/dev-login` solo con `NODE_ENV=development` y `DEV_LOGIN=true`, y un botón "Entrar como cliente de prueba" visible solo en desarrollo.
   *Hecho cuando:* un cliente entra con Google en `localhost`, y la ruta `dev-login` responde 404 fuera de desarrollo (hay prueba).

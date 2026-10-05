@@ -402,6 +402,9 @@ INSTALLMENTS_OPTIONS=3,6,12
 INSTALLMENTS_MIN_TOTAL_CENTS=30000
 DEV_LOGIN=true
 CULQI_SECRET_KEY=
+# Admin inicial que crea `npm run db:seed`
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
 # BIN de prueba que el demo trata como CMR; en producción la lista la entrega el banco
 CMR_BINS=411111
 ```
