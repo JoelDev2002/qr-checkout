@@ -5,6 +5,7 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     setupFiles: ['./tests/setup.ts'],
+    globalSetup: ['./tests/globalSetup.ts'],
     // Las pruebas de API comparten la base de pruebas, así que no se ejecutan en paralelo.
     fileParallelism: false,
   },
