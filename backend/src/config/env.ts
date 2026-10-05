@@ -32,6 +32,10 @@ const schema = z.object({
       message: 'Debe tener al menos una cantidad de cuotas, por ejemplo 3,6,12',
     }),
   INSTALLMENTS_MIN_TOTAL_CENTS: z.coerce.number().int().positive().default(30000),
+  JWT_SECRET: z.string().min(32, {
+    message: 'Debe tener al menos 32 caracteres',
+  }),
+  JWT_EXPIRES_IN: z.string().default('1h'),
 });
 
 const parsed = schema.safeParse(process.env);
