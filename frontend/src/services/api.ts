@@ -1,7 +1,26 @@
+import { clearSession, readSession, type SessionUser } from '../lib/session';
+
 const baseUrl = import.meta.env.VITE_API_URL ?? '/api';
+
+// Rutas públicas: un 401 aquí es una respuesta normal de la pantalla, no una sesión vencida.
+const PUBLIC_PATHS = ['/auth/login', '/auth/google', '/auth/dev-login', '/health'];
 
 type DataEnvelope<T> = { data: T };
 type ErrorEnvelope = { error: { code: string; message: string } };
+
+export type LoginResult = {
+  token: string;
+  user: SessionUser;
+};
+
+type UnauthorizedHandler = () => void;
+
+let unauthorizedHandler: UnauthorizedHandler = () => {};
+
+/** La app registra aquí qué hacer cuando el servidor responde 401 en una ruta protegida. */
+export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
+  unauthorizedHandler = handler;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -19,6 +38,10 @@ function isErrorEnvelope(body: unknown): body is ErrorEnvelope {
 
 function isDataEnvelope<T>(body: unknown): body is DataEnvelope<T> {
   return typeof body === 'object' && body !== null && 'data' in body;
+}
+
+function isPublicPath(path: string): boolean {
+  return PUBLIC_PATHS.includes(path);
 }
 
 async function parseBody(response: Response): Promise<unknown> {
@@ -41,18 +64,31 @@ async function parseBody(response: Response): Promise<unknown> {
 }
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const session = readSession();
+  const headers = new Headers(init?.headers);
+
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
+
+  if (session !== null) {
+    headers.set('Authorization', `Bearer ${session.token}`);
+  }
+
   let response: Response;
 
   try {
-    response = await fetch(`${baseUrl}${path}`, {
-      ...init,
-      headers: { Accept: 'application/json', ...init?.headers },
-    });
+    response = await fetch(`${baseUrl}${path}`, { ...init, headers });
   } catch {
     throw new ApiError('NETWORK_ERROR', 'No pudimos conectar con el servidor.');
   }
 
   const body = await parseBody(response);
+
+  if (response.status === 401 && !isPublicPath(path)) {
+    clearSession();
+    unauthorizedHandler();
+  }
 
   if (isErrorEnvelope(body)) {
     throw new ApiError(body.error.code, body.error.message);
@@ -67,4 +103,20 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function get<T>(path: string): Promise<T> {
   return request<T>(path);
+}
+
+export function post<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export function login(email: string, password: string): Promise<LoginResult> {
+  return post<LoginResult>('/auth/login', { email, password });
+}
+
+export function getMe(): Promise<SessionUser> {
+  return get<SessionUser>('/auth/me');
 }
