@@ -9,30 +9,48 @@ export function getTestPrisma(): PrismaClient {
   return prisma;
 }
 
-export async function cleanDatabase(): Promise<void> {
-  const client = getTestPrisma();
+// El esquema no cambia durante una corrida, así que la lista se resuelve una sola vez por proceso.
+let tableNames: string[] | null = null;
 
-  const tablesResult = await client.$queryRaw<Array<{ TABLE_NAME: string }>>`
+async function listTables(client: PrismaClient): Promise<string[]> {
+  if (tableNames) {
+    return tableNames;
+  }
+
+  const result = await client.$queryRaw<Array<{ TABLE_NAME: string }>>`
     SELECT TABLE_NAME
     FROM information_schema.TABLES
     WHERE TABLE_SCHEMA = DATABASE()
       AND TABLE_NAME <> '_prisma_migrations'
   `;
 
-  const tables = tablesResult.map((t) => t.TABLE_NAME);
+  tableNames = result.map((tabla) => tabla.TABLE_NAME);
+  return tableNames;
+}
+
+export async function cleanDatabase(): Promise<void> {
+  const client = getTestPrisma();
+  const tables = await listTables(client);
 
   if (tables.length === 0) {
     return;
   }
 
-  await client.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0');
+  // La transacción fija una sola conexión, así que los SET y los DELETE van por la misma sesión.
+  // DELETE vacía las tablas sin reconstruir cada una como hace TRUNCATE, que es lo que cuesta ~2 s.
+  await client.$transaction(
+    async (tx) => {
+      await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0');
 
-  try {
-    for (const table of tables) {
-      // Usamos query parametrizada por nombre de tabla via string literal seguro (nombres internos de DB)
-      await client.$executeRawUnsafe(`TRUNCATE TABLE \`${table}\``);
-    }
-  } finally {
-    await client.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1');
-  }
+      try {
+        for (const table of tables) {
+          // Los nombres salen de information_schema de la propia base, no de entrada externa.
+          await tx.$executeRawUnsafe(`DELETE FROM \`${table}\``);
+        }
+      } finally {
+        await tx.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1');
+      }
+    },
+    { timeout: 30_000 },
+  );
 }
