@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { createAuthRouter } from './modules/auth/routes.js';
+import { createCampaignsRouter } from './modules/campaigns/routes.js';
 import { createCategoriesRouter } from './modules/categories/routes.js';
 
 export function createApp() {
@@ -19,6 +20,7 @@ export function createApp() {
 
   app.use('/api/auth', createAuthRouter());
   app.use('/api/categories', createCategoriesRouter());
+  app.use('/api/campaigns', createCampaignsRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);
