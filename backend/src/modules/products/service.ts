@@ -1,5 +1,10 @@
-import { validateAttributes, type AttributeValues } from '../../domain/attributes.js';
-import { resolvePrices, type Campaign, type ResolvedPrices } from '../../domain/pricing.js';
+import {
+  toDisplayAttributes,
+  validateAttributes,
+  type AttributeValues,
+  type DisplayAttribute,
+} from '../../domain/attributes.js';
+import { resolvePrices, type Campaign, type PricedProduct, type ResolvedPrices } from '../../domain/pricing.js';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import { findActive as findActiveCampaigns } from '../campaigns/repository.js';
 import { findCategoryById, type CategoryRecord } from '../categories/repository.js';
@@ -13,7 +18,12 @@ import {
   updateProduct as updateProductRecord,
   type ProductRecord,
 } from './repository.js';
-import type { CreateProductInput, ListProductsQuery, UpdateProductInput } from './schemas.js';
+import type {
+  CreateProductInput,
+  ListProductsQuery,
+  PricePreviewInput,
+  UpdateProductInput,
+} from './schemas.js';
 
 export type ProductView = {
   id: number;
@@ -42,7 +52,40 @@ export type ProductListView = {
   pageSize: number;
 };
 
+/**
+ * Lo que ve el cliente al escanear. No lleva el stock exacto ni el porcentaje CMR: el límite es
+ * maxQuantity (RN-04) y el porcentaje CMR es una regla interna del producto (RN-01).
+ */
+export type ScannedProductView = {
+  id: number;
+  barcode: string;
+  name: string;
+  brand: string;
+  color: string | null;
+  originalPriceCents: number;
+  offerPriceCents: number;
+  cmrPriceCents: number;
+  hasCmrDiscount: boolean;
+  campaignName: string | null;
+  /** Porcentaje de ahorro del precio CMR contra el original, ya redondeado (RN-18). */
+  discountPercent: number;
+  details: DisplayAttribute[];
+  /** Menor entre el máximo por compra y el stock (RN-04). */
+  maxQuantity: number;
+};
+
+/** Vista previa del formulario del admin: no escribe nada en la base de datos. */
+export type PricePreviewView = {
+  offerPriceCents: number;
+  cmrPriceCents: number;
+  campaignName: string | null;
+  discountPercent: number;
+  cmrSavingCents: number;
+};
+
 const PRODUCT_NOT_FOUND_MESSAGE = 'El producto no existe.';
+/** El cliente no debe distinguir entre un código que no existe y uno que ya no se vende. */
+const SCAN_NOT_FOUND_MESSAGE = 'No encontramos este producto.';
 const DUPLICATE_BARCODE_MESSAGE = 'Ya existe un producto con ese código de barras.';
 const CATEGORY_NOT_FOUND_MESSAGE = 'La categoría no existe.';
 
@@ -264,4 +307,59 @@ export async function setProductActive(id: number, active: boolean, now: Date): 
   const campaigns = await findActiveCampaigns(now);
 
   return toView(product, campaigns, now);
+}
+
+export async function getProductByBarcode(barcode: string, now: Date): Promise<ScannedProductView> {
+  const product = await findProductByBarcode(barcode);
+
+  if (!product || !product.active) {
+    throw new ApiError(404, 'PRODUCT_NOT_FOUND', SCAN_NOT_FOUND_MESSAGE);
+  }
+
+  const category = await findCategoryById(product.categoryId, true);
+
+  if (!category || !category.active) {
+    throw new ApiError(404, 'PRODUCT_NOT_FOUND', SCAN_NOT_FOUND_MESSAGE);
+  }
+
+  const campaigns = await findActiveCampaigns(now);
+  const prices = resolvePrices(product, campaigns, now);
+
+  return {
+    id: product.id,
+    barcode: product.barcode,
+    name: product.name,
+    brand: product.brand,
+    color: product.color,
+    originalPriceCents: prices.originalCents,
+    offerPriceCents: prices.normalCents,
+    cmrPriceCents: prices.cmrCents,
+    hasCmrDiscount: product.hasCmrDiscount,
+    campaignName: prices.campaignName,
+    discountPercent: prices.cmrPercent,
+    details: toDisplayAttributes(category.fields, product.attributes),
+    maxQuantity: Math.min(product.maxPerPurchase, product.stock),
+  };
+}
+
+export async function previewPrice(input: PricePreviewInput, now: Date): Promise<PricePreviewView> {
+  // Con productId se incluyen las campañas por producto; sin él, ninguna de ese alcance aplica.
+  const candidate: PricedProduct = {
+    id: input.productId ?? 0,
+    categoryId: input.categoryId,
+    originalPriceCents: input.originalPriceCents,
+    hasCmrDiscount: input.hasCmrDiscount,
+    cmrDiscountBps: input.cmrDiscountBps,
+  };
+
+  const campaigns = await findActiveCampaigns(now);
+  const prices = resolvePrices(candidate, campaigns, now);
+
+  return {
+    offerPriceCents: prices.normalCents,
+    cmrPriceCents: prices.cmrCents,
+    campaignName: prices.campaignName,
+    discountPercent: prices.cmrPercent,
+    cmrSavingCents: prices.normalCents - prices.cmrCents,
+  };
 }

@@ -2,8 +2,10 @@ import type { Request, Response } from 'express';
 import type { ZodError, ZodIssue } from 'zod';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import {
+  barcodeParamSchema,
   createProductSchema,
   listProductsQuerySchema,
+  pricePreviewSchema,
   productIdParamSchema,
   setProductActiveSchema,
   updateProductSchema,
@@ -11,7 +13,9 @@ import {
 import {
   createProduct,
   getProduct,
+  getProductByBarcode,
   listProducts,
+  previewPrice,
   setProductActive,
   updateProduct,
 } from './service.js';
@@ -72,4 +76,16 @@ export async function setProductActiveController(req: Request, res: Response): P
   const { active } = parse(setProductActiveSchema.safeParse(req.body));
 
   res.json({ data: await setProductActive(id, active, new Date()) });
+}
+
+export async function getProductByBarcodeController(req: Request, res: Response): Promise<void> {
+  const { barcode } = parse(barcodeParamSchema.safeParse(req.params));
+
+  res.json({ data: await getProductByBarcode(barcode, new Date()) });
+}
+
+export async function previewPriceController(req: Request, res: Response): Promise<void> {
+  const input = parse(pricePreviewSchema.safeParse(req.body));
+
+  res.json({ data: await previewPrice(input, new Date()) });
 }

@@ -147,6 +147,40 @@ export const productIdParamSchema = z.object({
     .positive('El identificador debe ser mayor que cero.'),
 });
 
+/** Lo que llega del escáner: EAN-13, EAN-8, UPC y códigos internos. Solo dígitos. */
+export const BARCODE_MIN_DIGITS = 8;
+export const BARCODE_MAX_DIGITS = 14;
+
+export const barcodeParamSchema = z.object({
+  barcode: z
+    .string({ required_error: 'El código de barras es obligatorio.' })
+    .trim()
+    .regex(
+      new RegExp(`^\\d{${BARCODE_MIN_DIGITS},${BARCODE_MAX_DIGITS}}$`),
+      `El código debe tener entre ${BARCODE_MIN_DIGITS} y ${BARCODE_MAX_DIGITS} dígitos.`,
+    ),
+});
+
+/**
+ * Vista previa de precios del formulario del admin. Solo recibe lo que el admin está escribiendo;
+ * el servidor calcula el resto con las campañas vigentes (RN-01).
+ */
+export const pricePreviewSchema = z
+  .object({
+    originalPriceCents,
+    categoryId,
+    hasCmrDiscount,
+    cmrDiscountBps,
+    /** Solo si el producto ya existe: incluye las campañas con alcance por producto. */
+    productId: z.coerce
+      .number({ invalid_type_error: 'El producto debe ser un número.' })
+      .int('El producto debe ser un número entero.')
+      .positive('El producto debe ser mayor que cero.')
+      .optional(),
+  })
+  .strict()
+  .superRefine(checkCmrDiscount);
+
 const activeFilter = z
   .enum(['true', 'false', '1', '0'], { errorMap: () => ({ message: 'El filtro de estado debe ser true o false.' }) })
   .optional()
@@ -181,3 +215,4 @@ export const listProductsQuerySchema = z.object({
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
+export type PricePreviewInput = z.infer<typeof pricePreviewSchema>;
