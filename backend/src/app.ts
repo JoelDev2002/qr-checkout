@@ -3,6 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+import { createAuthRouter } from './modules/auth/routes.js';
 
 export function createApp() {
   const app = express();
@@ -14,6 +15,8 @@ export function createApp() {
   app.get('/api/health', (_req, res) => {
     res.json({ data: { status: 'ok' } });
   });
+
+  app.use('/api/auth', createAuthRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);

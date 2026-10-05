@@ -1,9 +1,11 @@
 import jwt, { type JwtPayload, type SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env.js';
 
+export type AuthRole = 'CUSTOMER' | 'CASHIER' | 'ADMIN';
+
 export type AuthTokenPayload = {
   sub: string;
-  role: 'client' | 'cashier' | 'admin';
+  role: AuthRole;
   email?: string;
 } & JwtPayload;
 

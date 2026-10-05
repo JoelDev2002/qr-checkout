@@ -31,7 +31,7 @@ Cómo usar este archivo:
   *Hecho cuando:* hay pruebas con códigos válidos e inválidos, y los internos generados pasan la validación.
 - [x] **T1.4 Cuotas informativas.** `domain/installments.ts` según RN-10 y la configuración de `.env`.
   *Hecho cuando:* pruebas con totales que no se dividen exactos (la primera cuota absorbe los céntimos) y con total por debajo del mínimo (sin cuotas).
-- [ ] **T1.5 Login de cajero y admin.** Módulo `auth` con `POST /auth/login`, bcrypt, JWT, `GET /auth/me` y middlewares de autenticación y roles.
+- [x] **T1.5 Login de cajero y admin.** Módulo `auth` con `POST /auth/login`, bcrypt, JWT, `GET /auth/me` y middlewares de autenticación y roles.
   *Hecho cuando:* pruebas Supertest confirman que un cajero no accede a rutas de admin y que un token vencido o falso es rechazado.
 - [ ] **T1.6 Semilla inicial.** `prisma/seed.ts` que crea el admin inicial (desde variables de entorno).
   *Hecho cuando:* `npm run db:seed` se puede ejecutar más de una vez sin duplicar datos.
