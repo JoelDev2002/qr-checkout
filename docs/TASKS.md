@@ -58,6 +58,7 @@ Cómo usar este archivo:
   *Hecho cuando:* el stock cambia solo con motivo y cada ajuste queda registrado con usuario y fecha. (API hecha; falta la ventana del admin)
 - [ ] **T1.16 Gestión de cajeros.** Módulo `users` (crear, listar, desactivar) y pantalla del admin.
   *Hecho cuando:* un cajero desactivado ya no puede iniciar sesión.
+  (API hecha; falta la pantalla del admin)
 - [ ] **T1.17 Datos de ejemplo.** Preparar en `prisma/seed-data/` los archivos `categories.json` (con sus campos adicionales), `campaigns.json` (una o dos campañas) y `products.json` (20 a 30 productos, incluidos los seis de `ARCHITECTURE.md` §10 y otros de categorías distintas) con códigos de barras que puedas escanear. Usar campañas y porcentajes CMR para que los precios se parezcan a los de Falabella; no tienen que coincidir al céntimo. Ampliar la semilla para cargarlos.
   *Hecho cuando:* `npm run db:seed` carga el catálogo y, si un producto es inválido, indica cuál y por qué.
 

@@ -7,6 +7,7 @@ import { createAuthRouter } from './modules/auth/routes.js';
 import { createCampaignsRouter } from './modules/campaigns/routes.js';
 import { createCategoriesRouter } from './modules/categories/routes.js';
 import { createProductsRouter } from './modules/products/routes.js';
+import { createUsersRouter } from './modules/users/routes.js';
 
 export function createApp() {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp() {
   app.use('/api/categories', createCategoriesRouter());
   app.use('/api/campaigns', createCampaignsRouter());
   app.use('/api/products', createProductsRouter());
+  app.use('/api/users', createUsersRouter());
 
   app.use(notFoundHandler);
   app.use(errorHandler);
