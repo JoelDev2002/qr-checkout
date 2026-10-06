@@ -106,3 +106,5 @@ Cómo usar este archivo:
 ## Después del MVP (no hacer todavía)
 
 Imágenes de productos, importación masiva en la interfaz, rol vendedor, descuento regular propio por producto, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas de Saga.
+
+- [ ] **T2.4 Generar y cancelar el QR.** POST y DELETE /cart/qr (ARCHITECTURE §7), bloqueo del carrito, expiración al leer, y pantalla QrTicket con cuenta regresiva. (API hecha; falta la pantalla)

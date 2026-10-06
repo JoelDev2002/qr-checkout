@@ -2,7 +2,15 @@ import type { Request, Response } from 'express';
 import type { ZodError, ZodIssue } from 'zod';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import { addItemSchema, productIdParamSchema, setItemQuantitySchema } from './schemas.js';
-import { addItemByBarcode, clearCart, getCart, removeItem, setItemQuantity } from './service.js';
+import {
+  addItemByBarcode,
+  cancelCartQr,
+  clearCart,
+  generateCartQr,
+  getCart,
+  removeItem,
+  setItemQuantity,
+} from './service.js';
 
 /** Los esquemas son estrictos: una clave desconocida se explica en español y no en el idioma de Zod. */
 function describeIssue(issue: ZodIssue): string {
@@ -56,4 +64,12 @@ export async function removeItemController(req: Request, res: Response): Promise
 
 export async function clearCartController(req: Request, res: Response): Promise<void> {
   res.json({ data: await clearCart(customerId(req), new Date()) });
+}
+
+export async function generateQrController(req: Request, res: Response): Promise<void> {
+  res.json({ data: await generateCartQr(customerId(req), new Date()) });
+}
+
+export async function cancelQrController(req: Request, res: Response): Promise<void> {
+  res.json({ data: await cancelCartQr(customerId(req), new Date()) });
 }

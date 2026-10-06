@@ -3,7 +3,9 @@ import { asyncHandler } from '../../middlewares/asyncHandler.js';
 import { authenticate, requireRole } from '../../middlewares/auth.js';
 import {
   addItemController,
+  cancelQrController,
   clearCartController,
+  generateQrController,
   getCartController,
   removeItemController,
   setItemQuantityController,
@@ -19,6 +21,8 @@ export function createCartsRouter(): Router {
   router.delete('/items', authenticate, onlyCustomer, asyncHandler(clearCartController));
   router.patch('/items/:productId', authenticate, onlyCustomer, asyncHandler(setItemQuantityController));
   router.delete('/items/:productId', authenticate, onlyCustomer, asyncHandler(removeItemController));
+  router.post('/qr', authenticate, onlyCustomer, asyncHandler(generateQrController));
+  router.delete('/qr', authenticate, onlyCustomer, asyncHandler(cancelQrController));
 
   return router;
 }

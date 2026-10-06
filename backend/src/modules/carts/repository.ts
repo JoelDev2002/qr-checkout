@@ -89,7 +89,7 @@ export type CartSession = {
   customerId: number;
   findCurrentCart(): Promise<CartRecord | null>;
   createOpenCart(): Promise<CartRecord>;
-  /** Vuelve a OPEN un carrito cuyo QR venció y borra su código y su expiración. */
+  /** Vuelve a OPEN un carrito cuyo QR venci� y borra su c�digo y su expiraci�n. */
   releaseExpiredQr(cartId: number, now: Date): Promise<void>;
   findProductByBarcode(barcode: string): Promise<CartProductRecord | null>;
   findItemQuantity(cartId: number, productId: number): Promise<number>;
@@ -98,6 +98,10 @@ export type CartSession = {
   removeItem(cartId: number, productId: number): Promise<void>;
   clearItems(cartId: number): Promise<void>;
   listItems(cartId: number): Promise<CartItemRecord[]>;
+  generateQr(cartId: number, qrCode: string, qrExpiresAt: Date): Promise<void>;
+  generateQrIfOpen(cartId: number, qrCode: string, qrExpiresAt: Date): Promise<number>;
+  cancelQr(cartId: number): Promise<void>;
+  cancelQrIfPending(cartId: number): Promise<number>;
 };
 
 function createCartSession(tx: Prisma.TransactionClient, customerId: number): CartSession {
@@ -173,6 +177,38 @@ function createCartSession(tx: Prisma.TransactionClient, customerId: number): Ca
         quantity: row.quantity,
         product: toProductRecord(row.product),
       }));
+    },
+
+    async generateQr(cartId, qrCode, qrExpiresAt) {
+      await tx.cart.update({
+        where: { id: cartId },
+        data: { qrCode, qrExpiresAt, status: 'PENDING' },
+      });
+    },
+
+    async generateQrIfOpen(cartId, qrCode, qrExpiresAt) {
+      const result = await tx.cart.updateMany({
+        where: { id: cartId, status: 'OPEN' },
+        data: { qrCode, qrExpiresAt, status: 'PENDING' },
+      });
+
+      return result.count;
+    },
+
+    async cancelQr(cartId) {
+      await tx.cart.update({
+        where: { id: cartId },
+        data: { status: 'OPEN', qrCode: null, qrExpiresAt: null },
+      });
+    },
+
+    async cancelQrIfPending(cartId) {
+      const result = await tx.cart.updateMany({
+        where: { id: cartId, status: 'PENDING' },
+        data: { status: 'OPEN', qrCode: null, qrExpiresAt: null },
+      });
+
+      return result.count;
     },
   };
 }
