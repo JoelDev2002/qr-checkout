@@ -58,7 +58,7 @@ Cómo usar este archivo:
   *Hecho cuando:* el stock cambia solo con motivo y cada ajuste queda registrado con usuario y fecha. (API hecha; falta la ventana del admin)
 - [ ] **T1.16 Gestión de cajeros.** Módulo `users` (crear, listar, desactivar) y pantalla del admin.
   *Hecho cuando:* un cajero desactivado ya no puede iniciar sesión.
-  (API hecha; falta la pantalla del admin)
+  (API hecha; falta la pantalla)
 - [x] **T1.17 Datos de ejemplo.** Preparar en `prisma/seed-data/` los archivos `categories.json` (con sus campos adicionales), `campaigns.json` (una o dos campañas) y `products.json` (20 a 30 productos, incluidos los seis de `ARCHITECTURE.md` §10 y otros de categorías distintas) con códigos de barras que puedas escanear. Usar campañas y porcentajes CMR para que los precios se parezcan a los de Falabella; no tienen que coincidir al céntimo. Ampliar la semilla para cargarlos.
   *Hecho cuando:* `npm run db:seed` carga el catálogo y, si un producto es inválido, indica cuál y por qué.
 
@@ -79,9 +79,9 @@ Cómo usar este archivo:
 - [ ] **T2.7 Comprobante.** Componente `Receipt` con estilos de impresión y la leyenda de comprobante simulado. Se muestra tras el cobro (botón **Imprimir comprobante**).
   *Hecho cuando:* al imprimir o guardar como PDF solo aparece el comprobante.
 - [ ] **T2.8 Historial del cliente.** `GET /purchases` y `/purchases/:saleId`, con pantalla de lista y detalle que reutiliza `Receipt`.
-  *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba).
+  *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba). (API hecha; falta la pantalla)
 - [ ] **T2.9 Cobros del día.** `GET /checkout/sales/today` y pantalla del cajero.
-  *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual.
+  *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual. (API hecha; falta la pantalla) (API hecha; falta la pantalla)
 - [ ] **T2.10 Pulido del flujo.** Estados de carga, vacío y error en todas las pantallas, redirecciones por rol, y revisión de accesibilidad de `DESIGN.md` §6.
   *Hecho cuando:* el flujo completo cliente → QR → cajero se puede recorrer sin instrucciones, en celular.
 
