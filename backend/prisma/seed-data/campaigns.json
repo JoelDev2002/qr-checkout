@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Cyber Dormitorio",
+    "scope": "CATEGORIES",
+    "targetCategory": "Dormitorio",
+    "discountType": "PERCENT",
+    "discountPercent": 44,
+    "priority": 3,
+    "startsAt": "2026-01-01",
+    "endsAt": "2027-12-31"
+  },
+  {
+    "name": "Audífonos −S/ 50",
+    "scope": "CATEGORIES",
+    "targetCategory": "Audífonos",
+    "discountType": "FIXED",
+    "discountAmount": 50.0,
+    "priority": 5,
+    "startsAt": "2026-01-01",
+    "endsAt": "2027-12-31"
+  },
+  {
+    "name": "Apple Pencil",
+    "scope": "PRODUCTS",
+    "targetBarcodes": ["2000000000138"],
+    "discountType": "PERCENT",
+    "discountPercent": 28.5,
+    "priority": 10,
+    "startsAt": "2026-01-01",
+    "endsAt": "2027-12-31"
+  },
+  {
+    "name": "Toda la tienda 5%",
+    "scope": "STORE",
+    "discountType": "PERCENT",
+    "discountPercent": 5,
+    "priority": 1,
+    "startsAt": "2026-01-01",
+    "endsAt": "2027-12-31"
+  }
+]

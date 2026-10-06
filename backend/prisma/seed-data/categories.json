@@ -1,0 +1,156 @@
+[
+  {
+    "name": "Dormitorio",
+    "fields": [
+      {
+        "key": "size",
+        "label": "Medida",
+        "type": "SELECT",
+        "required": true,
+        "options": ["1.5 plazas", "2 plazas", "Queen", "King"],
+        "sortOrder": 1
+      },
+      {
+        "key": "material",
+        "label": "Material",
+        "type": "TEXT",
+        "required": true,
+        "sortOrder": 2
+      },
+      {
+        "key": "includes_pillows",
+        "label": "Incluye almohadas",
+        "type": "BOOLEAN",
+        "sortOrder": 3
+      }
+    ]
+  },
+  {
+    "name": "Audífonos",
+    "fields": [
+      {
+        "key": "connectivity",
+        "label": "Conectividad",
+        "type": "SELECT",
+        "required": true,
+        "options": ["Bluetooth 5.3", "Bluetooth 5.0", "Inalámbrico 2.4 GHz", "Con cable"],
+        "sortOrder": 1
+      },
+      {
+        "key": "battery_hours",
+        "label": "Batería",
+        "type": "NUMBER",
+        "required": true,
+        "unit": "horas",
+        "sortOrder": 2
+      },
+      {
+        "key": "with_microphone",
+        "label": "Con micrófono",
+        "type": "BOOLEAN",
+        "sortOrder": 3
+      }
+    ]
+  },
+  {
+    "name": "Accesorios",
+    "fields": [
+      {
+        "key": "compatibility",
+        "label": "Compatibilidad",
+        "type": "SELECT",
+        "required": true,
+        "options": ["Universal", "iPhone", "Android", "iPad", "Notebook"],
+        "sortOrder": 1
+      },
+      {
+        "key": "length_cm",
+        "label": "Largo",
+        "type": "NUMBER",
+        "required": true,
+        "unit": "cm",
+        "sortOrder": 2
+      },
+      {
+        "key": "material",
+        "label": "Material",
+        "type": "TEXT",
+        "sortOrder": 3
+      },
+      {
+        "key": "includes_case",
+        "label": "Incluye estuche",
+        "type": "BOOLEAN",
+        "sortOrder": 4
+      }
+    ]
+  },
+  {
+    "name": "Electrohogar",
+    "fields": [
+      {
+        "key": "power_w",
+        "label": "Potencia",
+        "type": "NUMBER",
+        "required": true,
+        "unit": "W",
+        "sortOrder": 1
+      },
+      {
+        "key": "energy_rating",
+        "label": "Eficiencia energética",
+        "type": "SELECT",
+        "required": true,
+        "options": ["A++", "A+", "A", "B"],
+        "sortOrder": 2
+      },
+      {
+        "key": "warranty_months",
+        "label": "Garantía",
+        "type": "NUMBER",
+        "unit": "meses",
+        "sortOrder": 3
+      },
+      {
+        "key": "installation_included",
+        "label": "Incluye instalación",
+        "type": "BOOLEAN",
+        "sortOrder": 4
+      }
+    ]
+  },
+  {
+    "name": "Tecnología",
+    "fields": [
+      {
+        "key": "storage_gb",
+        "label": "Almacenamiento",
+        "type": "NUMBER",
+        "required": true,
+        "unit": "GB",
+        "sortOrder": 1
+      },
+      {
+        "key": "connectivity",
+        "label": "Conectividad",
+        "type": "SELECT",
+        "required": true,
+        "options": ["5G", "Wi-Fi 6", "Wi-Fi 5"],
+        "sortOrder": 2
+      },
+      {
+        "key": "battery_hours",
+        "label": "Batería",
+        "type": "NUMBER",
+        "unit": "horas",
+        "sortOrder": 3
+      },
+      {
+        "key": "includes_keyboard",
+        "label": "Incluye teclado",
+        "type": "BOOLEAN",
+        "sortOrder": 4
+      }
+    ]
+  }
+]
