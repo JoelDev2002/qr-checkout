@@ -2,23 +2,27 @@ import type { Request, Response } from 'express';
 import type { ZodError, ZodIssue } from 'zod';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import {
+  adjustStock,
+  createProduct,
+  getProduct,
+  getProductByBarcode,
+  listProducts,
+  listStockAdjustments,
+  previewPrice,
+  setProductActive,
+  updateProduct,
+} from './service.js';
+import {
   barcodeParamSchema,
   createProductSchema,
   listProductsQuerySchema,
   pricePreviewSchema,
   productIdParamSchema,
   setProductActiveSchema,
+  stockAdjustmentSchema,
+  stockAdjustmentsQuerySchema,
   updateProductSchema,
 } from './schemas.js';
-import {
-  createProduct,
-  getProduct,
-  getProductByBarcode,
-  listProducts,
-  previewPrice,
-  setProductActive,
-  updateProduct,
-} from './service.js';
 
 /** Los esquemas son estrictos: una clave desconocida se explica en español y no en el idioma de Zod. */
 function describeIssue(issue: ZodIssue): string {
@@ -88,4 +92,18 @@ export async function previewPriceController(req: Request, res: Response): Promi
   const input = parse(pricePreviewSchema.safeParse(req.body));
 
   res.json({ data: await previewPrice(input, new Date()) });
+}
+
+export async function adjustStockController(req: Request, res: Response): Promise<void> {
+  const { id } = parse(productIdParamSchema.safeParse(req.params));
+  const input = parse(stockAdjustmentSchema.safeParse(req.body));
+
+  res.json({ data: await adjustStock(id, input, actorUserId(req)) });
+}
+
+export async function listStockAdjustmentsController(req: Request, res: Response): Promise<void> {
+  const { id } = parse(productIdParamSchema.safeParse(req.params));
+  const query = parse(stockAdjustmentsQuerySchema.safeParse(req.query));
+
+  res.json({ data: await listStockAdjustments(id, query) });
 }

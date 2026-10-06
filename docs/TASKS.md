@@ -54,8 +54,8 @@ Cómo usar este archivo:
   *Hecho cuando:* lee un código real en Chrome de Android y en Safari de iPhone (probar con el túnel) y muestra un mensaje útil si se niega la cámara.
 - [ ] **T1.14 Admin: lista y formulario de productos.** Pantallas según `DESIGN.md` §4 (admin, puntos 1 y 2) con React Hook Form + Zod: botón **Escanear código** (usa `Scanner` y conserva el código que trae el producto), **Generar código interno** (con JsBarcode para imprimir), campos dinámicos según la categoría (`DynamicFields`), interruptor y porcentaje CMR, y vista previa de precios que llama a `POST /products/price-preview`. Si el código ya existe, ofrecer editar. Los campos NUMBER se envían como número, no como texto: convertir antes de enviar.
   *Hecho cuando:* se crea un producto escaneando su código, con los campos de su categoría y su descuento CMR, y queda visible en la lista.
-- [ ] **T1.15 Ajustes de stock.** `POST /products/:id/stock-adjustments` y ventana en el admin con motivo obligatorio y historial.
-  *Hecho cuando:* el stock cambia solo con motivo y cada ajuste queda registrado con usuario y fecha.
+- [ ] **T1.15 Ajustes de stock.** `POST /products/:id/stock-adjustments` y ventana en el admin con motivo obligatorio e historial.
+  *Hecho cuando:* el stock cambia solo con motivo y cada ajuste queda registrado con usuario y fecha. (API hecha; falta la ventana del admin)
 - [ ] **T1.16 Gestión de cajeros.** Módulo `users` (crear, listar, desactivar) y pantalla del admin.
   *Hecho cuando:* un cajero desactivado ya no puede iniciar sesión.
 - [ ] **T1.17 Datos de ejemplo.** Preparar en `prisma/seed-data/` los archivos `categories.json` (con sus campos adicionales), `campaigns.json` (una o dos campañas) y `products.json` (20 a 30 productos, incluidos los seis de `ARCHITECTURE.md` §10 y otros de categorías distintas) con códigos de barras que puedas escanear. Usar campañas y porcentajes CMR para que los precios se parezcan a los de Falabella; no tienen que coincidir al céntimo. Ampliar la semilla para cargarlos.

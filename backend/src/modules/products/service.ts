@@ -5,25 +5,32 @@ import {
   type DisplayAttribute,
 } from '../../domain/attributes.js';
 import { resolvePrices, type Campaign, type PricedProduct, type ResolvedPrices } from '../../domain/pricing.js';
+import { normalizeStockReason } from '../../domain/stock.js';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import { findActive as findActiveCampaigns } from '../campaigns/repository.js';
 import { findCategoryById, type CategoryRecord } from '../categories/repository.js';
 import {
+  applyStockAdjustment as applyStockAdjustmentRecord,
   createProduct as createProductRecord,
   findProductByBarcode,
   findProductById,
   isUniqueViolation,
   listProducts as listProductRecords,
+  listStockAdjustments as listStockAdjustmentRecords,
   setProductActive as setProductActiveRecord,
   updateProduct as updateProductRecord,
   type ProductRecord,
+  type StockAdjustmentRecord,
 } from './repository.js';
 import type {
   CreateProductInput,
   ListProductsQuery,
   PricePreviewInput,
+  StockAdjustmentInput,
+  StockAdjustmentsQuery,
   UpdateProductInput,
 } from './schemas.js';
+
 
 export type ProductView = {
   id: number;
@@ -83,11 +90,47 @@ export type PricePreviewView = {
   cmrSavingCents: number;
 };
 
+/** Un ajuste del historial: qué cambió, por qué, cuándo y quién lo hizo (RN-13). */
+export type StockAdjustmentView = {
+  id: number;
+  productId: number;
+  delta: number;
+  reason: string;
+  createdAt: string;
+  userId: number;
+  userName: string;
+};
+
+export type StockAdjustmentResultView = {
+  stock: number;
+  adjustment: StockAdjustmentView;
+};
+
+export type StockAdjustmentListView = {
+  items: StockAdjustmentView[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 const PRODUCT_NOT_FOUND_MESSAGE = 'El producto no existe.';
 /** El cliente no debe distinguir entre un código que no existe y uno que ya no se vende. */
 const SCAN_NOT_FOUND_MESSAGE = 'No encontramos este producto.';
 const DUPLICATE_BARCODE_MESSAGE = 'Ya existe un producto con ese código de barras.';
 const CATEGORY_NOT_FOUND_MESSAGE = 'La categoría no existe.';
+
+function toAdjustmentView(adjustment: StockAdjustmentRecord): StockAdjustmentView {
+  return {
+    id: adjustment.id,
+    productId: adjustment.productId,
+    delta: adjustment.delta,
+    reason: adjustment.reason,
+    createdAt: adjustment.createdAt.toISOString(),
+    userId: adjustment.userId,
+    userName: adjustment.userName,
+  };
+}
+
 
 /** Los espacios sobrantes no se guardan: ni al principio ni al final ni entre palabras. */
 function normalizeName(name: string): string {
@@ -361,5 +404,52 @@ export async function previewPrice(input: PricePreviewInput, now: Date): Promise
     campaignName: prices.campaignName,
     discountPercent: prices.cmrPercent,
     cmrSavingCents: prices.normalCents - prices.cmrCents,
+  };
+}
+
+/**
+ * RN-13: ajuste manual de stock con motivo, registrado con el usuario que lo hizo. Un producto
+ * inactivo también puede ajustarse: el stock se corrige aunque ya no se venda.
+ */
+export async function adjustStock(
+  id: number,
+  input: StockAdjustmentInput,
+  userId: number,
+): Promise<StockAdjustmentResultView> {
+  const result = await applyStockAdjustmentRecord({
+    productId: id,
+    userId,
+    delta: input.delta,
+    reason: normalizeStockReason(input.reason),
+  });
+
+  if (result.status === 'NOT_FOUND') {
+    throw new ApiError(404, 'NOT_FOUND', PRODUCT_NOT_FOUND_MESSAGE);
+  }
+
+  if (result.status === 'OUT_OF_STOCK') {
+    throw new ApiError(
+      409,
+      'OUT_OF_STOCK',
+      `El ajuste dejaría el stock en negativo: ahora hay ${result.stock} unidades.`,
+    );
+  }
+
+  return { stock: result.stock, adjustment: toAdjustmentView(result.adjustment) };
+}
+
+export async function listStockAdjustments(
+  id: number,
+  query: StockAdjustmentsQuery,
+): Promise<StockAdjustmentListView> {
+  await requireProduct(id);
+
+  const { rows, total } = await listStockAdjustmentRecords(id, query.page, query.pageSize);
+
+  return {
+    items: rows.map(toAdjustmentView),
+    total,
+    page: query.page,
+    pageSize: query.pageSize,
   };
 }

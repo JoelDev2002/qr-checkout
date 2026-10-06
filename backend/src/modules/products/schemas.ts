@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isValidEan13 } from '../../domain/barcode.js';
+import { STOCK_REASON_MAX_LENGTH, STOCK_REASON_MIN_LENGTH } from '../../domain/stock.js';
 
 export const PRODUCT_NAME_MAX_LENGTH = 120;
 export const PRODUCT_BRAND_MAX_LENGTH = 60;
@@ -186,6 +187,20 @@ const activeFilter = z
   .optional()
   .transform((value) => (value === undefined ? undefined : value === 'true' || value === '1'));
 
+const paginationFields = {
+  page: z.coerce
+    .number({ invalid_type_error: 'La página debe ser un número.' })
+    .int('La página debe ser un número entero.')
+    .min(1, 'La página empieza en 1.')
+    .default(1),
+  pageSize: z.coerce
+    .number({ invalid_type_error: 'El tamaño de página debe ser un número.' })
+    .int('El tamaño de página debe ser un número entero.')
+    .min(1, 'El tamaño de página debe ser al menos 1.')
+    .max(MAX_PAGE_SIZE, `El tamaño de página llega hasta ${MAX_PAGE_SIZE}.`)
+    .default(DEFAULT_PAGE_SIZE),
+};
+
 export const listProductsQuerySchema = z.object({
   q: z
     .string({ invalid_type_error: 'La búsqueda debe ser un texto.' })
@@ -199,20 +214,42 @@ export const listProductsQuerySchema = z.object({
     .positive('La categoría del filtro debe ser mayor que cero.')
     .optional(),
   active: activeFilter,
-  page: z.coerce
-    .number({ invalid_type_error: 'La página debe ser un número.' })
-    .int('La página debe ser un número entero.')
-    .min(1, 'La página empieza en 1.')
-    .default(1),
-  pageSize: z.coerce
-    .number({ invalid_type_error: 'El tamaño de página debe ser un número.' })
-    .int('El tamaño de página debe ser un número entero.')
-    .min(1, 'El tamaño de página debe ser al menos 1.')
-    .max(MAX_PAGE_SIZE, `El tamaño de página llega hasta ${MAX_PAGE_SIZE}.`)
-    .default(DEFAULT_PAGE_SIZE),
+  ...paginationFields,
 });
+
+/** RN-13: el ajuste es la cantidad que suma o resta y el motivo es obligatorio. Un delta de cero no cambia nada. */
+export const stockAdjustmentSchema = z
+  .object({
+    delta: z
+      .number({
+        required_error: 'La cantidad del ajuste es obligatoria.',
+        invalid_type_error: 'La cantidad del ajuste debe ser un número entero.',
+      })
+      .int('La cantidad del ajuste debe ser un número entero.')
+      .refine((value) => value !== 0, 'La cantidad del ajuste debe ser distinta de cero.'),
+    reason: z
+      .string({
+        required_error: 'El motivo del ajuste es obligatorio.',
+        invalid_type_error: 'El motivo del ajuste debe ser un texto.',
+      })
+      .trim()
+      .min(
+        STOCK_REASON_MIN_LENGTH,
+        `El motivo del ajuste debe tener al menos ${STOCK_REASON_MIN_LENGTH} caracteres.`,
+      )
+      .max(
+        STOCK_REASON_MAX_LENGTH,
+        `El motivo del ajuste no puede tener más de ${STOCK_REASON_MAX_LENGTH} caracteres.`,
+      ),
+  })
+  .strict();
+
+/** El historial del producto se pagina como el listado de productos. */
+export const stockAdjustmentsQuerySchema = z.object(paginationFields);
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
 export type PricePreviewInput = z.infer<typeof pricePreviewSchema>;
+export type StockAdjustmentInput = z.infer<typeof stockAdjustmentSchema>;
+export type StockAdjustmentsQuery = z.infer<typeof stockAdjustmentsQuerySchema>;

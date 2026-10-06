@@ -2,10 +2,12 @@ import { Router } from 'express';
 import { asyncHandler } from '../../middlewares/asyncHandler.js';
 import { authenticate, requireRole } from '../../middlewares/auth.js';
 import {
+  adjustStockController,
   createProductController,
   getProductByBarcodeController,
   getProductController,
   listProductsController,
+  listStockAdjustmentsController,
   previewPriceController,
   setProductActiveController,
   updateProductController,
@@ -24,6 +26,8 @@ export function createProductsRouter(): Router {
   router.get('/:id', authenticate, onlyAdmin, asyncHandler(getProductController));
   router.put('/:id', authenticate, onlyAdmin, asyncHandler(updateProductController));
   router.patch('/:id/active', authenticate, onlyAdmin, asyncHandler(setProductActiveController));
+  router.get('/:id/stock-adjustments', authenticate, onlyAdmin, asyncHandler(listStockAdjustmentsController));
+  router.post('/:id/stock-adjustments', authenticate, onlyAdmin, asyncHandler(adjustStockController));
 
   return router;
 }
