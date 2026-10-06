@@ -32,6 +32,8 @@ const schema = z.object({
       message: 'Debe tener al menos una cantidad de cuotas, por ejemplo 3,6,12',
     }),
   INSTALLMENTS_MIN_TOTAL_CENTS: z.coerce.number().int().positive().default(30000),
+  /** Vigencia del QR del carrito (RN-05). */
+  CART_QR_TTL_MINUTES: z.coerce.number().int().positive().default(30),
   JWT_SECRET: z.string().min(32, {
     message: 'Debe tener al menos 32 caracteres',
   }),

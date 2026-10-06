@@ -64,7 +64,7 @@ Cómo usar este archivo:
 
 ## Sprint 2 — Carrito, QR y cobro
 
-- [ ] **T2.1 API del carrito.** Módulo `carts`: obtener o crear el carrito abierto, agregar por código (suma 1), fijar la cantidad exacta (`PATCH` con `quantity`) quitar un producto y vaciar el carrito (`DELETE /cart/items`, rechazado con `CART_LOCKED` si hay un QR activo). Aplicar RN-04 (máximo y stock) y devolver los precios de cada ítem con `resolvePrices` y el resumen con `summarizeCart`.
+- [x] **T2.1 API del carrito.** Módulo `carts`: obtener o crear el carrito abierto, agregar por código (suma 1), fijar la cantidad exacta (`PATCH` con `quantity`) quitar un producto y vaciar el carrito (`DELETE /cart/items`, rechazado con `CART_LOCKED` si hay un QR activo). Aplicar RN-04 (máximo y stock) y devolver los precios de cada ítem con `resolvePrices` y el resumen con `summarizeCart`.
   *Hecho cuando:* pruebas cubren producto inexistente, sin stock, superar el máximo, carrito bloqueado y un cambio de campaña entre dos consultas (RN-17).
 - [ ] **T2.2 Pantalla del escáner del cliente.** Según `DESIGN.md` §4: visor, último producto con `PriceTag`, bloque plegable **Detalles** y contador de cantidad, barra inferior con total CMR. Crear los componentes `PriceTag`, `DetailsList` y `QuantityStepper` (RN-19). El contador espera unos 400 ms tras el último toque antes de enviar la cantidad al servidor, para no mandar una petición por cada toque.
   *Hecho cuando:* al escanear un producto se ven al instante su precio de oferta, su precio CMR (si lo tiene), la campaña aplicada y sus detalles; se agrega 1 unidad y se puede subir o bajar la cantidad con el contador o escribiéndola, sin pasar del límite.
