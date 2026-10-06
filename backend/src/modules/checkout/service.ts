@@ -1,8 +1,20 @@
 import { isQrExpired, itemIssue, type ItemIssue } from '../../domain/cart.js';
+import { resolveCharge, type ChargedItem, type PriceType } from '../../domain/checkout.js';
+import { docSeriesOf, resolveBuyer, type Buyer, type DocType } from '../../domain/document.js';
 import { resolvePrices, summarizeCart, type Campaign, type CartSummary } from '../../domain/pricing.js';
 import { ApiError } from '../../middlewares/errorHandler.js';
 import { findActive as findActiveCampaigns } from '../campaigns/repository.js';
-import { findCartByQrCode, releaseCart, type CheckoutCartRecord, type CheckoutItemRecord } from './repository.js';
+import {
+  ChargeConflict,
+  createPaidSale,
+  findCartByQrCode,
+  releaseCart,
+  type CheckoutCartRecord,
+  type CheckoutItemRecord,
+  type CreatePaidSaleItem,
+  type SaleRecord,
+} from './repository.js';
+import type { ConfirmCheckoutInput } from './schemas.js';
 
 /** El ítem que ve el cajero: sin stock exacto ni porcentaje CMR (RN-01, RN-04). */
 export type CheckoutItemView = {
@@ -32,6 +44,39 @@ export type CheckoutPreviewView = {
 export type CheckoutRejectView = {
   code: string;
   customerName: string;
+};
+
+/** La venta como la ve el comprobante: con los precios copiados de cada ítem (RN-09). */
+export type SaleItemView = {
+  barcode: string;
+  name: string;
+  quantity: number;
+  originalPriceCents: number;
+  offerPriceCents: number;
+  cmrPriceCents: number;
+  paidPriceCents: number;
+  subtotalCents: number;
+  campaignName: string | null;
+};
+
+export type SaleView = {
+  id: number;
+  code: string;
+  receiptNumber: string;
+  createdAt: string;
+  paymentMethod: SaleRecord['paymentMethod'];
+  priceApplied: PriceType;
+  docType: DocType;
+  buyerDocType: string | null;
+  buyerDocNumber: string | null;
+  buyerName: string | null;
+  customerName: string;
+  cashierName: string | null;
+  originalTotalCents: number;
+  offerTotalCents: number;
+  cmrTotalCents: number;
+  totalCents: number;
+  items: SaleItemView[];
 };
 
 /** Un carrito pendiente y vigente: lo único que el cajero puede cobrar o rechazar. */
@@ -123,4 +168,163 @@ export async function rejectCheckout(code: string, now: Date): Promise<CheckoutR
   }
 
   return { code: cart.qrCode ?? code, customerName: cart.customer.name };
+}
+
+function toSaleView(sale: SaleRecord): SaleView {
+  return {
+    id: sale.id,
+    code: sale.code,
+    receiptNumber: sale.receiptNumber,
+    createdAt: sale.createdAt.toISOString(),
+    paymentMethod: sale.paymentMethod,
+    priceApplied: sale.priceApplied,
+    docType: sale.docType,
+    buyerDocType: sale.buyerDocType,
+    buyerDocNumber: sale.buyerDocNumber,
+    buyerName: sale.buyerName,
+    customerName: sale.customerName,
+    cashierName: sale.cashierName,
+    originalTotalCents: sale.originalTotalCents,
+    offerTotalCents: sale.offerTotalCents,
+    cmrTotalCents: sale.cmrTotalCents,
+    totalCents: sale.totalCents,
+    items: sale.items.map((item) => ({
+      barcode: item.barcode,
+      name: item.name,
+      quantity: item.quantity,
+      originalPriceCents: item.originalPriceCents,
+      offerPriceCents: item.normalPriceCents,
+      cmrPriceCents: item.cmrPriceCents,
+      paidPriceCents: item.paidPriceCents,
+      subtotalCents: item.subtotalCents,
+      campaignName: item.campaignName,
+    })),
+  };
+}
+
+/** RN-11: si el comprobante no cuadra con lo que pide, ni se toca la base de datos. */
+function requireBuyer(input: ConfirmCheckoutInput): Buyer {
+  const resolution = resolveBuyer({ docType: input.docType, docNumber: input.buyerDocNumber, name: input.buyerName });
+
+  if (!resolution.ok) {
+    throw new ApiError(400, 'INVALID_DOCUMENT', resolution.message);
+  }
+
+  return resolution.buyer;
+}
+
+/**
+ * Antes de cobrar, ningún ítem puede estar inactivo ni por encima del stock: se dice cuál es y no se
+ * escribe nada, ni siquiera un número de comprobante.
+ */
+function requirePurchasable(items: readonly CheckoutItemView[]): void {
+  for (const item of items) {
+    if (item.issue === 'INACTIVE') {
+      throw new ApiError(409, 'OUT_OF_STOCK', `${item.name} ya no está a la venta.`);
+    }
+
+    if (item.issue === 'INSUFFICIENT_STOCK') {
+      throw new ApiError(409, 'OUT_OF_STOCK', `No hay stock suficiente de ${item.name}.`);
+    }
+  }
+}
+
+/** El conflicto lo detecta la transacción y lo traduce el servicio; el resto de errores son internos. */
+function toApiError(error: unknown): unknown {
+  if (!(error instanceof ChargeConflict)) {
+    return error;
+  }
+
+  if (error.reason === 'ALREADY_PAID') {
+    return new ApiError(409, 'ALREADY_PAID', ALREADY_PAID_MESSAGE);
+  }
+
+  return new ApiError(409, 'OUT_OF_STOCK', `No hay stock suficiente de ${error.productName ?? 'ese producto'}.`);
+}
+
+/**
+ * ARCHITECTURE.md §7: se vuelve a leer el carrito, se recalculan los precios con las campañas vigentes
+ * (RN-07, RN-17) y todo se cobra en una sola transacción.
+ */
+export async function confirmCheckout(
+  code: string,
+  input: ConfirmCheckoutInput,
+  cashierId: number,
+  now: Date,
+): Promise<SaleView> {
+  const cart = await requireChargeableCart(code, now);
+  // Las campañas se consultan una sola vez por petición y se reparten entre todos los ítems (§4).
+  const campaigns = await findActiveCampaigns(now);
+  const items = cart.items.map((item) => toItemView(item, campaigns, now));
+
+  requirePurchasable(items);
+
+  const buyer = requireBuyer(input);
+  const charge = resolveCharge(
+    input.paymentMethod,
+    items.map((item) => ({
+      quantity: item.quantity,
+      originalCents: item.originalPriceCents,
+      normalCents: item.offerPriceCents,
+      cmrCents: item.cmrPriceCents,
+    })),
+  );
+
+  try {
+    const sale = await createPaidSale({
+      code: cart.qrCode ?? code,
+      series: docSeriesOf(input.docType),
+      cartId: cart.id,
+      customerId: cart.customer.id,
+      cashierId,
+      paymentMethod: input.paymentMethod,
+      priceApplied: charge.priceApplied,
+      originalTotalCents: charge.summary.originalTotalCents,
+      offerTotalCents: charge.summary.normalTotalCents,
+      cmrTotalCents: charge.summary.cmrTotalCents,
+      totalCents: charge.totalCents,
+      docType: input.docType,
+      buyerDocType: buyer.docType,
+      buyerDocNumber: buyer.docNumber,
+      buyerName: buyer.name,
+      items: toSaleItems(items, charge.items),
+    });
+
+    return toSaleView(sale);
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
+/** La copia congelada de cada ítem: su identidad, su campaña y los precios ya resueltos (RN-09). */
+function toSaleItems(
+  views: readonly CheckoutItemView[],
+  charged: readonly ChargedItem[],
+): CreatePaidSaleItem[] {
+  const saleItems: CreatePaidSaleItem[] = [];
+  let position = 0;
+
+  for (const view of views) {
+    const item = charged[position];
+    position += 1;
+
+    if (!item) {
+      throw new Error('El cobro no tiene los precios de todos los ítems del carrito.');
+    }
+
+    saleItems.push({
+      productId: view.productId,
+      barcode: view.barcode,
+      name: view.name,
+      quantity: item.quantity,
+      originalPriceCents: item.originalCents,
+      normalPriceCents: item.normalCents,
+      cmrPriceCents: item.cmrCents,
+      paidPriceCents: item.paidPriceCents,
+      subtotalCents: item.subtotalCents,
+      campaignName: view.campaignName,
+    });
+  }
+
+  return saleItems;
 }

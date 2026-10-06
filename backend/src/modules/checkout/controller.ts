@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import type { ZodError, ZodIssue } from 'zod';
 import { ApiError } from '../../middlewares/errorHandler.js';
-import { cartCodeParamSchema } from './schemas.js';
-import { getCheckoutPreview, rejectCheckout } from './service.js';
+import { cartCodeParamSchema, confirmCheckoutSchema } from './schemas.js';
+import { confirmCheckout, getCheckoutPreview, rejectCheckout } from './service.js';
 
 /** Los esquemas son estrictos: una clave desconocida se explica en español y no en el idioma de Zod. */
 function describeIssue(issue: ZodIssue): string {
@@ -22,10 +22,26 @@ function parse<T>(result: { success: true; data: T } | { success: false; error: 
   return result.data;
 }
 
+/** El cajero que cobra: el pago se guarda a su nombre (ARCHITECTURE.md §7). */
+function actorUserId(req: Request): number {
+  if (!req.user) {
+    throw new ApiError(401, 'UNAUTHORIZED', 'Se requiere autenticación.');
+  }
+
+  return Number(req.user.sub);
+}
+
 export async function getCheckoutController(req: Request, res: Response): Promise<void> {
   const { code } = parse(cartCodeParamSchema.safeParse(req.params));
 
   res.json({ data: await getCheckoutPreview(code, new Date()) });
+}
+
+export async function confirmCheckoutController(req: Request, res: Response): Promise<void> {
+  const { code } = parse(cartCodeParamSchema.safeParse(req.params));
+  const input = parse(confirmCheckoutSchema.safeParse(req.body));
+
+  res.json({ data: await confirmCheckout(code, input, actorUserId(req), new Date()) });
 }
 
 export async function rejectCheckoutController(req: Request, res: Response): Promise<void> {
