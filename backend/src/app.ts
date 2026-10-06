@@ -9,6 +9,7 @@ import { createCartsRouter } from './modules/carts/routes.js';
 import { createCategoriesRouter } from './modules/categories/routes.js';
 import { createCheckoutRouter } from './modules/checkout/routes.js';
 import { createProductsRouter } from './modules/products/routes.js';
+import { createPurchasesRouter } from './modules/purchases/routes.js';
 import { createUsersRouter } from './modules/users/routes.js';
 
 export function createApp() {
@@ -28,6 +29,7 @@ export function createApp() {
   app.use('/api/products', createProductsRouter());
   app.use('/api/users', createUsersRouter());
   app.use('/api/cart', createCartsRouter());
+  app.use('/api/purchases', createPurchasesRouter());
   app.use('/api/checkout', createCheckoutRouter());
 
   app.use(notFoundHandler);

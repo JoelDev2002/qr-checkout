@@ -1,5 +1,6 @@
 import { Prisma, type CartStatus, type DocType, type PaymentMethod, type PriceType } from '@prisma/client';
 import { formatReceiptNumber } from '../../domain/document.js';
+import { startOfDayLima } from '../../domain/time.js';
 import { prisma } from '../../infrastructure/prisma.js';
 
 /** Lo del producto que el cajero necesita para mostrar el ítem y decidir si se puede cobrar. */
@@ -118,7 +119,6 @@ export async function releaseCart(cartId: number): Promise<number> {
 
   return result.count;
 }
-
 /** Un ítem de la venta con los tres precios y el cobrado, para que el historial no cambie (RN-09). */
 export type SaleItemRecord = {
   productId: number;
@@ -175,7 +175,6 @@ export type CreatePaidSaleInput = {
   buyerName: string | null;
   items: CreatePaidSaleItem[];
 };
-
 /**
  * Falla prevista dentro de la transacción del cobro. Se lanza para que Prisma revierta todo lo escrito
  * hasta ese punto; el servicio la traduce al error que ve el cajero.
@@ -247,96 +246,67 @@ function toSaleRecord(row: SaleRow): SaleRecord {
     items: row.items.map((item) => ({ ...item })),
   };
 }
+export type SaleTodaySummaryItem = {
+  code: string;
+  receiptNumber: string;
+  createdAt: Date;
+  paymentMethod: PaymentMethod;
+  docType: DocType;
+  totalCents: number;
+};
 
-/**
- * RN-23: el contador de la serie sube de forma atómica y en la misma transacción del cobro, así que
- * dos cobros simultáneos de la misma serie nunca reciben el mismo número. La fila de la serie nace con
- * el primer cobro de esa serie.
- */
-async function nextSeriesNumber(tx: Prisma.TransactionClient, series: string): Promise<number> {
-  await tx.$executeRaw(
-    Prisma.sql`INSERT INTO \`DocumentSeries\` (\`series\`, \`lastNumber\`) VALUES (${series}, 1)
-      ON DUPLICATE KEY UPDATE \`lastNumber\` = \`lastNumber\` + 1`,
-  );
+export type PaymentMethodBreakdown = Record<string, number>;
 
-  const row = await tx.documentSeries.findUniqueOrThrow({
-    where: { series },
-    select: { lastNumber: true },
+export type SalesTodaySummary = {
+  count: number;
+  totalCents: number;
+  byPaymentMethod: PaymentMethodBreakdown;
+};
+
+export type SalesTodayList = {
+  items: SaleTodaySummaryItem[];
+  summary: SalesTodaySummary;
+};
+
+export async function findSalesTodayForCashier(
+  cashierId: number,
+  now: Date,
+): Promise<SalesTodayList> {
+  const start = startOfDayLima(now);
+
+  const sales = await prisma.sale.findMany({
+    where: {
+      cashierId,
+      createdAt: {
+        gte: start,
+        lte: now,
+      },
+    },
+    select: {
+      code: true,
+      receiptNumber: true,
+      createdAt: true,
+      paymentMethod: true,
+      docType: true,
+      totalCents: true,
+    },
+    orderBy: { createdAt: 'desc', id: 'desc' },
   });
 
-  return row.lastNumber;
-}
+  const count = sales.length;
+  let totalCents = 0;
+  const byPaymentMethod: PaymentMethodBreakdown = {};
+  for (const sale of sales) {
+    totalCents += sale.totalCents;
+    byPaymentMethod[sale.paymentMethod] = (byPaymentMethod[sale.paymentMethod] ?? 0) + sale.totalCents;
+  }
 
-/**
- * ARCHITECTURE.md §7: una sola transacción para el cobro entero. El carrito pasa de PENDING a PAID con
- * una actualización condicionada, cada ítem baja su stock con el stock condicionado a la cantidad, y
- * solo entonces se numeran el comprobante y se escriben la venta y su detalle. Si algo falla, la
- * excepción revierte el carrito, el stock y la numeración.
- */
-export async function createPaidSale(input: CreatePaidSaleInput): Promise<SaleRecord> {
-  return prisma.$transaction(
-    async (tx) => {
-      // Primero el carrito: si otro cajero lo cobró, la actualización no afecta ninguna fila y todo
-      // lo que se escriba después se revierte.
-      const paid = await tx.cart.updateMany({
-        where: { id: input.cartId, status: 'PENDING' },
-        data: { status: 'PAID' },
-      });
-
-      if (paid.count === 0) {
-        throw new ChargeConflict('ALREADY_PAID');
-      }
-
-      for (const item of input.items) {
-        const updated = await tx.product.updateMany({
-          where: { id: item.productId, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
-        });
-
-        if (updated.count === 0) {
-          throw new ChargeConflict('OUT_OF_STOCK', item.name);
-        }
-      }
-
-      const receiptNumber = formatReceiptNumber(input.series, await nextSeriesNumber(tx, input.series));
-
-      const row = await tx.sale.create({
-        data: {
-          code: input.code,
-          receiptNumber,
-          cartId: input.cartId,
-          customerId: input.customerId,
-          cashierId: input.cashierId,
-          paymentMethod: input.paymentMethod,
-          priceApplied: input.priceApplied,
-          originalTotalCents: input.originalTotalCents,
-          offerTotalCents: input.offerTotalCents,
-          cmrTotalCents: input.cmrTotalCents,
-          totalCents: input.totalCents,
-          docType: input.docType,
-          buyerDocType: input.buyerDocType,
-          buyerDocNumber: input.buyerDocNumber,
-          buyerName: input.buyerName,
-          items: {
-            create: input.items.map((item) => ({
-              productId: item.productId,
-              barcode: item.barcode,
-              name: item.name,
-              quantity: item.quantity,
-              originalPriceCents: item.originalPriceCents,
-              normalPriceCents: item.normalPriceCents,
-              cmrPriceCents: item.cmrPriceCents,
-              paidPriceCents: item.paidPriceCents,
-              subtotalCents: item.subtotalCents,
-              campaignName: item.campaignName,
-            })),
-          },
-        },
-        select: saleSelect,
-      });
-
-      return toSaleRecord(row);
+  return {
+    items: sales,
+    summary: {
+      count,
+      totalCents,
+      byPaymentMethod,
     },
-    { timeout: 10_000 },
-  );
+  };
 }
