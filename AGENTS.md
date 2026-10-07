@@ -12,7 +12,7 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 - `docs/TASKS.md`: tareas en orden, con su criterio "Hecho cuando".
 
 ## Cómo trabajar
-1. Hacer **una sola tarea** de `docs/TASKS.md` por vez, la primera sin marcar, salvo que se indique otra.
+1. Haz solo la tarea que indique el prompt (si no indica ninguna, la primera sin marcar de `docs/TASKS.md`). No adelantes tareas siguientes ni toques nada fuera de su alcance.
 2. Antes de escribir código, dar un plan breve (qué archivos se tocan).
 3. Si algo contradice los documentos o falta información, preguntar antes de inventar.
 4. No añadir dependencias que no estén en `ARCHITECTURE.md` §1 sin preguntar.
@@ -22,6 +22,9 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 8. Al terminar una tarea: corre las comprobaciones del "Hecho cuando", muestra la salida completa, lista los archivos cambiados con `git status` y espera mi aprobación antes de hacer commit. Nunca hagas commit sin que yo lo pida o sin que el prompt de la tarea lo indique.
 9. Mientras desarrollas una tarea, corre solo los archivos de prueba relevantes (por ejemplo npx vitest run tests/modules/xxx.test.ts). Corre la suite completa una sola vez, al final de la tarea.
 10. Las pruebas nunca comparan ids contra valores literales (por ejemplo id === 1). Usan el id que devuelve lo que acaban de crear.
+11. Este proyecto tiene UNA sola tienda. No existe storeId ni nada parecido. No inventes campos, tablas, rutas ni parámetros que no estén en los documentos.
+12. Nunca dejes la suite en rojo. Antes de terminar, corre la suite completa una vez y `npx tsc --noEmit` en backend. Si fallan pruebas que no son tuyas, detente y dime cuáles, sin cambiarlas.
+13. Antes de cada commit muestra `git diff --stat` y `git status`, y comprueba que solo aparezcan archivos de la tarea. No borres ni reescribas archivos existentes: edita solo las líneas necesarias.
 
 ## Reglas que no se rompen
 1. **Dinero siempre en céntimos enteros.** Nunca `float`. Formatear solo al mostrar, con `lib/money.ts`.
