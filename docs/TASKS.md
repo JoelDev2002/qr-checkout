@@ -35,7 +35,7 @@ Cómo usar este archivo:
   *Hecho cuando:* pruebas Supertest confirman que un cajero no accede a rutas de admin y que un token vencido o falso es rechazado.
 - [x] **T1.6 Semilla inicial.** `prisma/seed.ts` que crea el admin inicial (desde variables de entorno).
   *Hecho cuando:* `npm run db:seed` se puede ejecutar más de una vez sin duplicar datos.
-- [ ] **T1.7 Login con Google.** `POST /auth/google` (verifica el token, crea o busca al cliente) y botón en el frontend. Añadir `POST /auth/dev-login` solo con `NODE_ENV=development` y `DEV_LOGIN=true`, y un botón "Entrar como cliente de prueba" visible solo en desarrollo.
+- [ ] **T1.7 Login con Google.** `POST /auth/google` (verifica el token, crea o busca al cliente) y botón en el frontend. Añadir `POST /auth/dev-login` solo con `NODE_ENV=development` y `DEV_LOGIN=true`, y un botón "Entrar como cliente de prueba" visible solo en desarrollo. (API hecha; falta el botón en el frontend y configurar Google Cloud)
   *Hecho cuando:* un cliente entra con Google en `localhost`, y la ruta `dev-login` responde 404 fuera de desarrollo (hay prueba).
 - [x] **T1.8 API de categorías y campos adicionales.** Módulo `categories` (RN-15): CRUD de categorías y de sus campos (texto, número con unidad, lista de opciones, sí/no; obligatorio u opcional). `key` y `type` no se pueden cambiar después de crear el campo; categorías y campos se desactivan, no se borran. Crear `domain/attributes.ts` que valida los valores de un producto contra los campos activos de su categoría.
   *Hecho cuando:* pruebas cubren tipos incorrectos, obligatorios faltantes, valores fuera de la lista, claves desconocidas, intento de cambiar `key` o `type`, y permisos por rol.

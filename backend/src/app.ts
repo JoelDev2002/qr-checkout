@@ -2,8 +2,9 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import type { GoogleIdTokenVerifier } from './infrastructure/googleAuth.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
-import { createAuthRouter } from './modules/auth/routes.js';
+import { createAuthRouter, type AuthRouterOptions } from './modules/auth/routes.js';
 import { createCampaignsRouter } from './modules/campaigns/routes.js';
 import { createCartsRouter } from './modules/carts/routes.js';
 import { createCategoriesRouter } from './modules/categories/routes.js';
@@ -12,7 +13,18 @@ import { createProductsRouter } from './modules/products/routes.js';
 import { createPurchasesRouter } from './modules/purchases/routes.js';
 import { createUsersRouter } from './modules/users/routes.js';
 
-export function createApp() {
+export type CreateAppOptions = {
+  /** NODE_ENV real, o el que se quiera simular en las pruebas. */
+  nodeEnv?: string;
+  /** DEV_LOGIN: true solo registra dev-login si además NODE_ENV es "development". */
+  devLogin?: boolean;
+  /** '' (vacío) significa Google no configurado: /auth/google responde 503. */
+  googleClientId?: string;
+  /** Verificador de Google inyectado: las pruebas usan uno falso sin red. */
+  googleVerifier?: GoogleIdTokenVerifier;
+};
+
+export function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
   app.use(helmet());
@@ -23,7 +35,14 @@ export function createApp() {
     res.json({ data: { status: 'ok' } });
   });
 
-  app.use('/api/auth', createAuthRouter());
+  const authOptions: AuthRouterOptions = {
+    devLoginEnabled:
+      (options.nodeEnv ?? env.NODE_ENV) === 'development' && (options.devLogin ?? env.DEV_LOGIN),
+    googleClientId: options.googleClientId ?? env.GOOGLE_CLIENT_ID,
+    googleVerifier: options.googleVerifier,
+  };
+
+  app.use('/api/auth', createAuthRouter(authOptions));
   app.use('/api/categories', createCategoriesRouter());
   app.use('/api/campaigns', createCampaignsRouter());
   app.use('/api/products', createProductsRouter());

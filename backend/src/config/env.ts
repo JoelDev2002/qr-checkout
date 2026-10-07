@@ -38,6 +38,13 @@ const schema = z.object({
     message: 'Debe tener al menos 32 caracteres',
   }),
   JWT_EXPIRES_IN: z.string().default('1h'),
+  /** ID de cliente OAuth de Google; si no se configura, /auth/google responde 503. */
+  GOOGLE_CLIENT_ID: z.string().trim().default(''),
+  /** Solo con "true" y NODE_ENV=development se registra POST /auth/dev-login. */
+  DEV_LOGIN: z
+    .string()
+    .default('')
+    .transform((value) => value.trim().toLowerCase() === 'true'),
 });
 
 const parsed = schema.safeParse(process.env);
