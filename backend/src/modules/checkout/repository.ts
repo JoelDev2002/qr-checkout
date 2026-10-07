@@ -385,7 +385,7 @@ export async function findSalesTodayForCashier(
       docType: true,
       totalCents: true,
     },
-    orderBy: { createdAt: 'desc', id: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
   });
 
   const count = sales.length;

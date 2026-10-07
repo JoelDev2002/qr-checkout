@@ -101,7 +101,7 @@ export async function findPurchasesByCustomer(
     prisma.sale.findMany({
       where: { customerId },
       select: purchaseSummarySelect,
-      orderBy: { createdAt: 'desc', id: 'desc' },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
