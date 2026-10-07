@@ -1,9 +1,9 @@
 import { Prisma, type CartStatus, type DocType, type PaymentMethod, type PriceType } from '@prisma/client';
 import { formatReceiptNumber } from '../../domain/document.js';
 import { startOfDayLima } from '../../domain/time.js';
-import { prisma } from '../../infrastructure/prisma.js';
+import { prisma } from '../../infrastructure/prisma.js';;
 
-/** Lo del producto que el cajero necesita para mostrar el ítem y decidir si se puede cobrar. */
+/** Lo del producto que el cajero necesita para mostrar el ├¡tem y decidir si se puede cobrar. */
 export type CheckoutProductRecord = {
   id: number;
   barcode: string;
@@ -25,7 +25,7 @@ export type CheckoutItemRecord = {
   product: CheckoutProductRecord;
 };
 
-/** El carrito que el cajero escaneó: con el nombre del cliente y sus ítems ya cargados. */
+/** El carrito que el cajero escane├│: con el nombre del cliente y sus ├¡tems ya cargados. */
 export type CheckoutCartRecord = {
   id: number;
   status: CartStatus;
@@ -100,7 +100,7 @@ function toCartRecord(row: CartRow): CheckoutCartRecord {
   };
 }
 
-/** El único lugar donde se busca un carrito por el código del QR (RN-05). */
+/** El ├║nico lugar donde se busca un carrito por el c├│digo del QR (RN-05). */
 export async function findCartByQrCode(code: string): Promise<CheckoutCartRecord | null> {
   const row = await prisma.cart.findUnique({ where: { qrCode: code }, select: cartSelect });
 
@@ -108,8 +108,8 @@ export async function findCartByQrCode(code: string): Promise<CheckoutCartRecord
 }
 
 /**
- * Rechazar devuelve el carrito a OPEN y borra el código y su expiración, para que el cliente pueda
- * volver a editarlo (RN-06). La condición evita tocar un carrito que entre tanto se cobró.
+ * Rechazar devuelve el carrito a OPEN y borra el c├│digo y su expiraci├│n, para que el cliente pueda
+ * volver a editarlo (RN-06). La condici├│n evita tocar un carrito que entre tanto se cobr├│.
  */
 export async function releaseCart(cartId: number): Promise<number> {
   const result = await prisma.cart.updateMany({
@@ -119,7 +119,8 @@ export async function releaseCart(cartId: number): Promise<number> {
 
   return result.count;
 }
-/** Un ítem de la venta con los tres precios y el cobrado, para que el historial no cambie (RN-09). */
+
+/** Un ├¡tem de la venta con los tres precios y el cobrado, para que el historial no cambie (RN-09). */
 export type SaleItemRecord = {
   productId: number;
   barcode: string;
@@ -156,9 +157,9 @@ export type SaleRecord = {
 export type CreatePaidSaleItem = SaleItemRecord;
 
 export type CreatePaidSaleInput = {
-  /** El código del carrito, que en caja es también el código de la venta (RN-23). */
+  /** El c├│digo del carrito, que en caja es tambi├®n el c├│digo de la venta (RN-23). */
   code: string;
-  /** T001, B001 o F001, según el comprobante (RN-23). */
+  /** T001, B001 o F001, seg├║n el comprobante (RN-23). */
   series: string;
   cartId: number;
   customerId: number;
@@ -175,14 +176,15 @@ export type CreatePaidSaleInput = {
   buyerName: string | null;
   items: CreatePaidSaleItem[];
 };
+
 /**
- * Falla prevista dentro de la transacción del cobro. Se lanza para que Prisma revierta todo lo escrito
+ * Falla prevista dentro de la transacci├│n del cobro. Se lanza para que Prisma revierta todo lo escrito
  * hasta ese punto; el servicio la traduce al error que ve el cajero.
  */
 export class ChargeConflict extends Error {
   constructor(
     readonly reason: 'ALREADY_PAID' | 'OUT_OF_STOCK',
-    /** Solo en OUT_OF_STOCK: qué producto no pudo descontarse. */
+    /** Solo en OUT_OF_STOCK: qu├® producto no pudo descontarse. */
     readonly productName: string | null = null,
   ) {
     super(reason);
@@ -245,6 +247,99 @@ function toSaleRecord(row: SaleRow): SaleRecord {
     cashierName: row.cashier ? row.cashier.name : null,
     items: row.items.map((item) => ({ ...item })),
   };
+}
+
+/**
+ * RN-23: el contador de la serie sube de forma at├│mica y en la misma transacci├│n del cobro, as├¡ que
+ * dos cobros simult├íneos de la misma serie nunca reciben el mismo n├║mero. La fila de la serie nace con
+ * el primer cobro de esa serie.
+ */
+async function nextSeriesNumber(tx: Prisma.TransactionClient, series: string): Promise<number> {
+  await tx.$executeRaw(
+    Prisma.sql`INSERT INTO \`DocumentSeries\` (\`series\`, \`lastNumber\`) VALUES (${series}, 1)
+      ON DUPLICATE KEY UPDATE \`lastNumber\` = \`lastNumber\` + 1`,
+  );
+
+  const row = await tx.documentSeries.findUniqueOrThrow({
+    where: { series },
+    select: { lastNumber: true },
+  });
+
+  return row.lastNumber;
+}
+
+/**
+ * ARCHITECTURE.md ┬º7: una sola transacci├│n para el cobro entero. El carrito pasa de PENDING a PAID con
+ * una actualizaci├│n condicionada, cada ├¡tem baja su stock con el stock condicionado a la cantidad, y
+ * solo entonces se numeran el comprobante y se escriben la venta y su detalle. Si algo falla, la
+ * excepci├│n revierte el carrito, el stock y la numeraci├│n.
+ */
+export async function createPaidSale(input: CreatePaidSaleInput): Promise<SaleRecord> {
+  return prisma.$transaction(
+    async (tx) => {
+      // Primero el carrito: si otro cajero lo cobr├│, la actualizaci├│n no afecta ninguna fila y todo
+      // lo que se escriba despu├®s se revierte.
+      const paid = await tx.cart.updateMany({
+        where: { id: input.cartId, status: 'PENDING' },
+        data: { status: 'PAID' },
+      });
+
+      if (paid.count === 0) {
+        throw new ChargeConflict('ALREADY_PAID');
+      }
+
+      for (const item of input.items) {
+        const updated = await tx.product.updateMany({
+          where: { id: item.productId, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+
+        if (updated.count === 0) {
+          throw new ChargeConflict('OUT_OF_STOCK', item.name);
+        }
+      }
+
+      const receiptNumber = formatReceiptNumber(input.series, await nextSeriesNumber(tx, input.series));
+
+      const row = await tx.sale.create({
+        data: {
+          code: input.code,
+          receiptNumber,
+          cartId: input.cartId,
+          customerId: input.customerId,
+          cashierId: input.cashierId,
+          paymentMethod: input.paymentMethod,
+          priceApplied: input.priceApplied,
+          originalTotalCents: input.originalTotalCents,
+          offerTotalCents: input.offerTotalCents,
+          cmrTotalCents: input.cmrTotalCents,
+          totalCents: input.totalCents,
+          docType: input.docType,
+          buyerDocType: input.buyerDocType,
+          buyerDocNumber: input.buyerDocNumber,
+          buyerName: input.buyerName,
+          items: {
+            create: input.items.map((item) => ({
+              productId: item.productId,
+              barcode: item.barcode,
+              name: item.name,
+              quantity: item.quantity,
+              originalPriceCents: item.originalPriceCents,
+              normalPriceCents: item.normalPriceCents,
+              cmrPriceCents: item.cmrPriceCents,
+              paidPriceCents: item.paidPriceCents,
+              subtotalCents: item.subtotalCents,
+              campaignName: item.campaignName,
+            })),
+          },
+        },
+        select: saleSelect,
+      });
+
+          return toSaleRecord(row);
+    },
+    { timeout: 10_000 },
+  );
 }
 export type SaleTodaySummaryItem = {
   code: string;

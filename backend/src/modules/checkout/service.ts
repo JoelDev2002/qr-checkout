@@ -1,4 +1,4 @@
-import { itemIssue, type ItemIssue } from '../../domain/cart.js';
+import { isQrExpired, itemIssue, type ItemIssue } from '../../domain/cart.js';
 import { resolveCharge, type ChargedItem, type PriceType } from '../../domain/checkout.js';
 import { docSeriesOf, resolveBuyer, type Buyer, type DocType } from '../../domain/document.js';
 import { resolvePrices, summarizeCart, type Campaign, type CartSummary } from '../../domain/pricing.js';
