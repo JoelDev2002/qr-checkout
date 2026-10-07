@@ -72,3 +72,19 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 
 ## Fuera de alcance por ahora
 Imágenes de productos, importación masiva desde la interfaz, rol vendedor, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas reales de Saga.
+
+## Cierre de tarea (aplica a TODA tarea)
+1. Mientras trabajas corre solo los archivos de prueba que toques. Al final corre la suite completa UNA vez y la comprobación de tipos (npx tsc --noEmit) en los paquetes que cambiaste. Todo debe pasar. Si hay pruebas en rojo que no son tuyas, detente y dime cuáles, sin cambiarlas.
+2. Antes de commitear muestra git diff --stat y git status. Solo deben aparecer archivos de esta tarea. Si ves archivos o borrados que no son de la tarea, detente.
+3. Marca la tarea [x] en docs/TASKS.md solo si el prompt lo indica, editando solo esa línea. Si el prompt dice que no la marques, solo agrega o quita la nota que indique.
+4. Haz el commit con el mensaje que indique el prompt. Si algo falla dos veces, detente y dime qué pasó.
+5. Si algo del prompt no se puede hacer con lo que existe (una ruta de la API, un campo, una librería), detente y dime en vez de inventarlo.
+6. Termina con un resumen corto: qué hiciste, qué decisiones tomaste y qué debo probar a mano.
+
+## Pantallas (frontend)
+- Solo frontend: no toques backend, prisma ni migraciones. Las formas EXACTAS de lo que se envía y se recibe se leen de backend/src/modules/<módulo>/schemas.ts y controller.ts. Si falta algo en la API, detente y dime; no lo inventes.
+- Todas las llamadas van por services/api.ts. Estilos con los tokens de DESIGN.md §2, textos en español con acentos, estados de carga, vacío y error (con botón Reintentar), botones deshabilitados mientras se envía, área táctil mínima de 44 px, que se vea bien desde 360 px y foco visible.
+- Reutiliza lo que ya existe (AdminLayout, navegación, session.ts, RequireRole, componentes) en vez de duplicarlo. Antes de crear algo, busca si ya existe.
+- Librerías: solo las de ARCHITECTURE.md §1. Si necesitas otra, detente y pregunta.
+- Las pruebas de Vitest cubren la lógica pura; la apariencia la compruebo yo a mano.
+- Al terminar una pantalla, en docs/TASKS.md NO marques la tarea [x] (la marco yo tras probarla). Solo quita la nota “(API hecha; falta la pantalla)” si la tiene.
