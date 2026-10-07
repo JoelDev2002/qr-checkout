@@ -4,6 +4,12 @@ import { Home } from './pages/Home';
 import { AdminHome } from './pages/admin/AdminHome';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
+import { DevScanner } from './pages/dev/DevScanner';
+
+// Temporal de la T1.13: /dev/scanner existe solo en desarrollo; se elimina en la T1.14.
+const devRoutes: RouteObject[] = import.meta.env.DEV
+  ? [{ path: '/dev/scanner', element: <DevScanner /> }]
+  : [];
 
 export const routes: RouteObject[] = [
   { path: '/', element: <Home /> },
@@ -24,4 +30,5 @@ export const routes: RouteObject[] = [
       </RequireRole>
     ),
   },
+  ...devRoutes,
 ];
