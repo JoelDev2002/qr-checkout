@@ -1,5 +1,5 @@
-import type { ProductListItem } from '../types/product';
-import { get } from './api';
+import type { AdminProduct, ProductListItem } from '../types/product';
+import { get, patch } from './api';
 
 type ProductPage = {
   items: ProductListItem[];
@@ -7,6 +7,23 @@ type ProductPage = {
   page: number;
   pageSize: number;
 };
+
+export type AdminProductPage = {
+  items: AdminProduct[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+/** Lista del admin; los parámetros los construye lib/productQuery.ts. */
+export function listProducts(query: string): Promise<AdminProductPage> {
+  return get<AdminProductPage>(`/products${query}`);
+}
+
+/** RN-12: los productos no se borran, solo se activan o desactivan. */
+export function setProductActive(id: number, active: boolean): Promise<AdminProduct> {
+  return patch<AdminProduct>(`/products/${id}/active`, { active });
+}
 
 /** El selector de productos del formulario busca contra el servidor con una espera de 300 ms. */
 export function searchProducts(query: string): Promise<ProductPage> {

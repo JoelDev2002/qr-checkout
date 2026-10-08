@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { AdminHome } from './pages/admin/AdminHome';
 import { Campaigns } from './pages/admin/Campaigns';
 import { Categories } from './pages/admin/Categories';
+import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
 import { DevScanner } from './pages/dev/DevScanner';
@@ -21,6 +22,14 @@ export const routes: RouteObject[] = [
     element: (
       <RequireRole roles={['ADMIN']}>
         <AdminHome />
+      </RequireRole>
+    ),
+  },
+  {
+    path: '/admin/products',
+    element: (
+      <RequireRole roles={['ADMIN']}>
+        <Products />
       </RequireRole>
     ),
   },
