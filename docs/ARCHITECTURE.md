@@ -128,6 +128,7 @@ model User {
   cashierSales Sale[]            @relation("CashierSales")
   customerSales Sale[]           @relation("CustomerSales")
   adjustments  StockAdjustment[]
+  scans        ProductScan[]
 }
 
 model Category {
@@ -207,6 +208,7 @@ model Product {
   cartItems          CartItem[]
   saleItems          SaleItem[]
   adjustments        StockAdjustment[]
+  scans              ProductScan[]
 }
 
 model StockAdjustment {
@@ -293,6 +295,18 @@ model SaleItem {
 model DocumentSeries {
   series     String @id // T001, B001, F001
   lastNumber Int    @default(0)
+}
+
+model ProductScan {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  customerId Int
+  customer   User     @relation(fields: [customerId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([createdAt])
 }
 ```
 

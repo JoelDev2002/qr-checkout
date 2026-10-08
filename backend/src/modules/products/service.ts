@@ -12,6 +12,7 @@ import { findCategoryById, type CategoryRecord } from '../categories/repository.
 import {
   applyStockAdjustment as applyStockAdjustmentRecord,
   createProduct as createProductRecord,
+  createProductScan,
   findProductByBarcode,
   findProductById,
   isUniqueViolation,
@@ -352,7 +353,11 @@ export async function setProductActive(id: number, active: boolean, now: Date): 
   return toView(product, campaigns, now);
 }
 
-export async function getProductByBarcode(barcode: string, now: Date): Promise<ScannedProductView> {
+export async function getProductByBarcode(
+  barcode: string,
+  now: Date,
+  customerId: number | null,
+): Promise<ScannedProductView> {
   const product = await findProductByBarcode(barcode);
 
   if (!product || !product.active) {
@@ -367,6 +372,16 @@ export async function getProductByBarcode(barcode: string, now: Date): Promise<S
 
   const campaigns = await findActiveCampaigns(now);
   const prices = resolvePrices(product, campaigns, now);
+
+  // T3.1: solo un cliente registra la lectura, y solo si la consulta encontró el producto. Si el
+  // registro falla, la consulta responde igual: la lectura no debe tumbar el escáner.
+  if (customerId !== null) {
+    try {
+      await createProductScan(product.id, customerId);
+    } catch (error) {
+      console.error(`No se pudo registrar la lectura del producto ${product.id}:`, error);
+    }
+  }
 
   return {
     id: product.id,

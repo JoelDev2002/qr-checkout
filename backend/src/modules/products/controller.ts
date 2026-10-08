@@ -85,7 +85,10 @@ export async function setProductActiveController(req: Request, res: Response): P
 export async function getProductByBarcodeController(req: Request, res: Response): Promise<void> {
   const { barcode } = parse(barcodeParamSchema.safeParse(req.params));
 
-  res.json({ data: await getProductByBarcode(barcode, new Date()) });
+  // T3.1: la lectura se registra solo cuando la consulta es de un cliente (T1.7 + roles).
+  const customerId = req.user?.role === 'CUSTOMER' ? Number(req.user.sub) : null;
+
+  res.json({ data: await getProductByBarcode(barcode, new Date(), customerId) });
 }
 
 export async function previewPriceController(req: Request, res: Response): Promise<void> {

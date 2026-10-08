@@ -214,6 +214,11 @@ export async function findProductByBarcode(barcode: string): Promise<ProductReco
   return row ? toRecord(row) : null;
 }
 
+/** Cada lectura exitosa del escáner del cliente deja una fila (T3.1: "más escaneados"). */
+export async function createProductScan(productId: number, customerId: number): Promise<void> {
+  await prisma.productScan.create({ data: { productId, customerId } });
+}
+
 /** El producto y su ajuste de stock inicial nacen juntos: o se guardan los dos o ninguno (RN-13). */
 export async function createProduct(data: CreateProductData): Promise<ProductRecord> {
   return prisma.$transaction(async (tx) => {

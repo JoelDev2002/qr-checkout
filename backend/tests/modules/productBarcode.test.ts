@@ -40,7 +40,7 @@ const CAMPANA_FIN = new Date('2026-06-30T00:00:00.000Z');
 
 let emailCounter = 0;
 
-async function createRoleToken(role: AuthRole): Promise<string> {
+async function createRoleToken(role: AuthRole): Promise<{ id: number; token: string }> {
   emailCounter += 1;
   const user = await getTestPrisma().user.create({
     data: {
@@ -51,7 +51,7 @@ async function createRoleToken(role: AuthRole): Promise<string> {
     },
   });
 
-  return signAuthToken({ sub: String(user.id), role, email: user.email });
+  return { id: user.id, token: signAuthToken({ sub: String(user.id), role, email: user.email }) };
 }
 
 function bearer(token: string): [string, string] {
@@ -160,6 +160,7 @@ let app: Express;
 let adminToken: string;
 let cashierToken: string;
 let customerToken: string;
+let customerId: number;
 let audifonos: { id: number };
 let camas: { id: number };
 
@@ -178,9 +179,13 @@ beforeEach(async () => {
   await cleanDatabase();
   app = createApp();
 
-  adminToken = await createRoleToken('ADMIN');
-  cashierToken = await createRoleToken('CASHIER');
-  customerToken = await createRoleToken('CUSTOMER');
+  const admin = await createRoleToken('ADMIN');
+  adminToken = admin.token;
+  const cashier = await createRoleToken('CASHIER');
+  cashierToken = cashier.token;
+  const customer = await createRoleToken('CUSTOMER');
+  customerToken = customer.token;
+  customerId = customer.id;
 
   audifonos = await createCategory('Audífonos');
   camas = await createCategory('Camas');
@@ -411,6 +416,35 @@ describe('GET /api/products/barcode/:barcode', () => {
     expect(cliente.status).toBe(200);
     expect(sinToken.status).toBe(401);
     expect(sinToken.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('registra una lectura solo cuando la consulta es de un cliente y el producto se encuentra', async () => {
+    const producto = await insertProduct({ categoryId: audifonos.id, name: 'Audífonos buds' });
+
+    const delCliente = await getByBarcode(producto.barcode, customerToken);
+    expect(delCliente.status).toBe(200);
+
+    const delCajero = await getByBarcode(producto.barcode, cashierToken);
+    expect(delCajero.status).toBe(200);
+
+    const delAdmin = await getByBarcode(producto.barcode, adminToken);
+    expect(delAdmin.status).toBe(200);
+
+    // No se registra cuando la consulta falla: ni código inexistente ni producto inactivo.
+    const inexistente = await getByBarcode(nextBarcode());
+    expect(inexistente.status).toBe(404);
+
+    const inactivo = await insertProduct({ categoryId: audifonos.id, name: 'Audífonos inactivos', active: false });
+    const desactivado = await getByBarcode(inactivo.barcode);
+    expect(desactivado.status).toBe(404);
+
+    const lecturas = await getTestPrisma().productScan.findMany({
+      where: { productId: producto.id },
+      select: { customerId: true },
+    });
+
+    expect(lecturas.map((lectura) => lectura.customerId)).toEqual([customerId]);
+    expect(await getTestPrisma().productScan.count()).toBe(1);
   });
 });
 

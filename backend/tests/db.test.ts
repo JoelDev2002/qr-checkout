@@ -74,6 +74,9 @@ async function fillEveryTable() {
     },
   });
   await prisma.documentSeries.create({ data: { series: 'T001', lastNumber: 1 } });
+  await prisma.productScan.create({
+    data: { productId: producto.id, customerId: user.id },
+  });
 }
 
 async function countEveryTable() {
@@ -93,6 +96,7 @@ async function countEveryTable() {
     Sale: await prisma.sale.count(),
     SaleItem: await prisma.saleItem.count(),
     DocumentSeries: await prisma.documentSeries.count(),
+    ProductScan: await prisma.productScan.count(),
   };
 }
 
@@ -126,7 +130,7 @@ describe('db helper', () => {
     expect(countAfter).toBe(0);
   });
 
-  it('vacía las trece tablas del proyecto y deja intactas las migraciones', async () => {
+  it('vacía las catorce tablas del proyecto y deja intactas las migraciones', async () => {
     await fillEveryTable();
 
     expect(await countEveryTable()).toEqual({
@@ -143,6 +147,7 @@ describe('db helper', () => {
       Sale: 1,
       SaleItem: 1,
       DocumentSeries: 1,
+      ProductScan: 1,
     });
 
     await cleanDatabase();
@@ -161,6 +166,7 @@ describe('db helper', () => {
       Sale: 0,
       SaleItem: 0,
       DocumentSeries: 0,
+      ProductScan: 0,
     });
 
     const [migraciones] = await prisma.$queryRaw<Array<{ total: bigint }>>`
