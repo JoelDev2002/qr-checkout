@@ -29,8 +29,20 @@ export function createApp(options: CreateAppOptions = {}) {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: env.FRONTEND_URL }));
-  app.use(express.json());
+  // Solo el origen del frontend recibe cabeceras CORS; el resto pasa sin ellas.
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || origin === env.FRONTEND_URL) {
+          callback(null, true);
+          return;
+        }
+
+        callback(null, false);
+      },
+    }),
+  );
+  app.use(express.json({ limit: '100kb' }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ data: { status: 'ok' } });

@@ -9,8 +9,12 @@ export type AuthTokenPayload = {
   email?: string;
 } & JwtPayload;
 
+/** Único algoritmo admitido: se fija al firmar y al verificar para no aceptar ninguno otro. */
+const ALGORITHM = 'HS256';
+
 export function signAuthToken(payload: AuthTokenPayload): string {
   const options: SignOptions = {
+    algorithm: ALGORITHM,
     expiresIn: env.JWT_EXPIRES_IN as SignOptions['expiresIn'],
   };
 
@@ -18,6 +22,6 @@ export function signAuthToken(payload: AuthTokenPayload): string {
 }
 
 export function verifyAuthToken(token: string): AuthTokenPayload {
-  const decoded = jwt.verify(token, env.JWT_SECRET) as AuthTokenPayload;
+  const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: [ALGORITHM] }) as AuthTokenPayload;
   return decoded;
 }
