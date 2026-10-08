@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router-dom';
 import { RequireRole } from './components/RequireRole';
 import { Home } from './pages/Home';
 import { AdminHome } from './pages/admin/AdminHome';
+import { Categories } from './pages/admin/Categories';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
 import { DevScanner } from './pages/dev/DevScanner';
@@ -19,6 +20,14 @@ export const routes: RouteObject[] = [
     element: (
       <RequireRole roles={['ADMIN']}>
         <AdminHome />
+      </RequireRole>
+    ),
+  },
+  {
+    path: '/admin/categories',
+    element: (
+      <RequireRole roles={['ADMIN']}>
+        <Categories />
       </RequireRole>
     ),
   },

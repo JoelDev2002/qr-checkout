@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clearSession, type Role } from '../lib/session';
 
@@ -11,10 +12,11 @@ type RoleWorkspaceProps = {
   title: string;
   name: string;
   role: Role;
+  children?: ReactNode;
 };
 
 /** Marco común de las pantallas de cajero y admin: encabezado, quién entró y salir. */
-export function RoleWorkspace({ title, name, role }: RoleWorkspaceProps) {
+export function RoleWorkspace({ title, name, role, children }: RoleWorkspaceProps) {
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -30,6 +32,8 @@ export function RoleWorkspace({ title, name, role }: RoleWorkspaceProps) {
 
         <p className="mt-6 text-base text-ink">{name}</p>
         <p className="text-sm text-muted">{ROLE_LABELS[role]}</p>
+
+        {children}
 
         <button
           type="button"
