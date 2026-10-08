@@ -1,5 +1,10 @@
 import type { ProductCreateBody, ProductUpdateBody } from '../lib/productForm';
-import type { AdminProduct, ProductListItem } from '../types/product';
+import type {
+  AdminProduct,
+  ProductListItem,
+  StockAdjustment,
+  StockAdjustmentPage,
+} from '../types/product';
 import { get, patch, post, put } from './api';
 
 type ProductPage = {
@@ -34,6 +39,32 @@ export function searchProducts(query: string): Promise<ProductPage> {
 
 export function getProduct(id: number): Promise<AdminProduct> {
   return get<AdminProduct>(`/products/${id}`);
+}
+
+export type StockAdjustmentInput = {
+  delta: number;
+  reason: string;
+};
+
+export type StockAdjustmentResult = {
+  stock: number;
+  adjustment: StockAdjustment;
+};
+
+/** RN-13: ajusta el stock con motivo; el servidor decide el resultado (409 si quedaría negativo). */
+export function adjustStock(id: number, body: StockAdjustmentInput): Promise<StockAdjustmentResult> {
+  return post<StockAdjustmentResult>(`/products/${id}/stock-adjustments`, body);
+}
+
+/** Historial paginado de ajustes del producto (RN-13). */
+export function listStockAdjustments(
+  id: number,
+  page: number,
+  pageSize: number,
+): Promise<StockAdjustmentPage> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+
+  return get<StockAdjustmentPage>(`/products/${id}/stock-adjustments?${params.toString()}`);
 }
 
 export function createProduct(body: ProductCreateBody): Promise<AdminProduct> {

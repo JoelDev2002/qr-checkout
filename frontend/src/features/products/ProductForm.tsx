@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { Scanner } from '../../components/Scanner';
@@ -36,6 +36,8 @@ type ProductFormProps = {
   conflict: string | null;
   onConfirmDiscard: () => void;
   onCancelDiscard: () => void;
+  /** Abre la ventana de ajuste de stock; solo al editar (RN-13). */
+  onAskAdjustStock: () => void;
 };
 
 function activeFieldsOf(category: Category | undefined): CategoryField[] {
@@ -78,6 +80,7 @@ export function ProductForm({
   conflict,
   onConfirmDiscard,
   onCancelDiscard,
+  onAskAdjustStock,
 }: ProductFormProps) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const fieldsRef = useRef<CategoryField[]>([]);
@@ -94,6 +97,13 @@ export function ProductForm({
 
   // El esquema valida contra los campos de la categoría elegida en este momento.
   fieldsRef.current = fields;
+
+  // Tras un ajuste de stock, el formulario muestra el stock nuevo (RN-13).
+  useEffect(() => {
+    if (mode === 'edit' && product !== undefined) {
+      setValue('stock', String(product.stock));
+    }
+  }, [mode, product, setValue]);
 
   function handleScan(text: string) {
     setValue('barcode', text, { shouldValidate: true, shouldDirty: true });
@@ -398,9 +408,17 @@ export function ProductForm({
           {mode === 'create' ? (
             <p className="mt-1 text-sm text-muted">Unidades disponibles al crear el producto.</p>
           ) : (
-            <p className="mt-1 text-sm text-muted">
-              El stock cambia con los ajustes, nunca desde aquí.
-            </p>
+            <div className="mt-1">
+              <p className="text-sm text-muted">El stock cambia con los ajustes, nunca desde aquí.</p>
+              <button
+                type="button"
+                onClick={onAskAdjustStock}
+                disabled={submitting}
+                className={`${secondaryButton} mt-2`}
+              >
+                Ajustar stock
+              </button>
+            </div>
           )}
           {errors.stock !== undefined && (
             <p className="mt-1 text-sm text-cmr">{errors.stock.message}</p>

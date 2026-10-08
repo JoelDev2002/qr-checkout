@@ -37,3 +37,22 @@ export type AdminProduct = {
   updatedAt: string;
   prices: ProductPrices;
 };
+
+/** Un ajuste del historial: qué cambió, por qué, cuándo y quién lo hizo (RN-13). */
+export type StockAdjustment = {
+  id: number;
+  productId: number;
+  delta: number;
+  reason: string;
+  createdAt: string;
+  userId: number;
+  userName: string;
+};
+
+/** Página del historial de ajustes, tal como la devuelve GET /products/:id/stock-adjustments. */
+export type StockAdjustmentPage = {
+  items: StockAdjustment[];
+  total: number;
+  page: number;
+  pageSize: number;
+};

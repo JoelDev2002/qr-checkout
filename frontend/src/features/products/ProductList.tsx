@@ -13,6 +13,7 @@ type ProductListProps = {
   onAskToggle: (product: AdminProduct) => void;
   onConfirmToggle: () => void;
   onCancelToggle: () => void;
+  onAskAdjust: (product: AdminProduct) => void;
 };
 
 type ProductRowProps = {
@@ -22,6 +23,7 @@ type ProductRowProps = {
   onAskToggle: (product: AdminProduct) => void;
   onConfirmToggle: () => void;
   onCancelToggle: () => void;
+  onAskAdjust: (product: AdminProduct) => void;
 };
 
 function ProductTableRow({
@@ -31,6 +33,7 @@ function ProductTableRow({
   onAskToggle,
   onConfirmToggle,
   onCancelToggle,
+  onAskAdjust,
 }: ProductRowProps) {
   const cells = formatProductPrices(product);
 
@@ -74,13 +77,22 @@ function ProductTableRow({
         />
       </td>
       <td className="p-2">
-        <Link
-          to={`/admin/products/${product.id}`}
-          aria-label={`Editar ${product.name}`}
-          className={editLinkClasses}
-        >
-          Editar
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to={`/admin/products/${product.id}`}
+            aria-label={`Editar ${product.name}`}
+            className={editLinkClasses}
+          >
+            Editar
+          </Link>
+          <button
+            type="button"
+            onClick={() => onAskAdjust(product)}
+            className={editLinkClasses}
+          >
+            Ajustar stock
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -93,6 +105,7 @@ function ProductCard({
   onAskToggle,
   onConfirmToggle,
   onCancelToggle,
+  onAskAdjust,
 }: ProductRowProps) {
   const cells = formatProductPrices(product);
 
@@ -151,6 +164,13 @@ function ProductCard({
         >
           Editar
         </Link>
+        <button
+          type="button"
+          onClick={() => onAskAdjust(product)}
+          className={editLinkClasses}
+        >
+          Ajustar stock
+        </button>
       </div>
     </li>
   );
@@ -164,6 +184,7 @@ export function ProductList({
   onAskToggle,
   onConfirmToggle,
   onCancelToggle,
+  onAskAdjust,
 }: ProductListProps) {
   return (
     <div className="mt-4">
@@ -208,6 +229,7 @@ export function ProductList({
                 onAskToggle={onAskToggle}
                 onConfirmToggle={onConfirmToggle}
                 onCancelToggle={onCancelToggle}
+                onAskAdjust={onAskAdjust}
               />
             ))}
           </tbody>
@@ -224,6 +246,7 @@ export function ProductList({
             onAskToggle={onAskToggle}
             onConfirmToggle={onConfirmToggle}
             onCancelToggle={onCancelToggle}
+            onAskAdjust={onAskAdjust}
           />
         ))}
       </ul>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ProductForm } from '../../features/products/ProductForm';
+import { StockAdjustmentPanel } from '../../features/products/StockAdjustment';
 import type { ProductFormMode, ProductFormValues } from '../../features/products/schema';
 import {
   buildCreateBody,
@@ -61,6 +62,7 @@ export function ProductFormPage() {
     null,
   );
   const [retryKey, setRetryKey] = useState(0);
+  const [adjusting, setAdjusting] = useState<AdminProduct | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -246,6 +248,17 @@ export function ProductFormPage() {
               }
             }}
             onCancelDiscard={() => setConflict(null)}
+            onAskAdjustStock={() => setAdjusting(product)}
+          />
+        )}
+
+        {adjusting !== null && (
+          <StockAdjustmentPanel
+            product={adjusting}
+            onChanged={(stock) =>
+              setProduct((current) => (current === null ? current : { ...current, stock }))
+            }
+            onClose={() => setAdjusting(null)}
           />
         )}
       </div>

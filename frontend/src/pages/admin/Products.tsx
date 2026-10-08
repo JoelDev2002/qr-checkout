@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ProductList } from '../../features/products/ProductList';
+import { StockAdjustmentPanel } from '../../features/products/StockAdjustment';
 import { buildProductListQuery, type ProductStatusFilter } from '../../lib/productQuery';
 import { clearSession, readSession } from '../../lib/session';
 import { ApiError } from '../../services/api';
@@ -51,6 +52,7 @@ export function Products() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pending, setPending] = useState<AdminProduct | null>(null);
+  const [adjusting, setAdjusting] = useState<AdminProduct | null>(null);
   const [notice, setNotice] = useState<string | null>(
     // El formulario deja el aviso "Producto guardado" al volver a la lista.
     () => readNoticeFromState(location.state),
@@ -284,6 +286,15 @@ export function Products() {
             onAskToggle={handleAskToggle}
             onConfirmToggle={() => void handleConfirmToggle()}
             onCancelToggle={() => setPending(null)}
+            onAskAdjust={setAdjusting}
+          />
+        )}
+
+        {adjusting !== null && (
+          <StockAdjustmentPanel
+            product={adjusting}
+            onChanged={() => setRefreshKey((key) => key + 1)}
+            onClose={() => setAdjusting(null)}
           />
         )}
 
