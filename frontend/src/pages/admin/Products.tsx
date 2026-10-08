@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ProductList } from '../../features/products/ProductList';
 import { buildProductListQuery, type ProductStatusFilter } from '../../lib/productQuery';
 import { clearSession, readSession } from '../../lib/session';
@@ -24,8 +24,19 @@ function toMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 }
 
+function readNoticeFromState(state: unknown): string | null {
+  if (typeof state === 'object' && state !== null && 'notice' in state) {
+    const notice = (state as { notice?: unknown }).notice;
+
+    return typeof notice === 'string' ? notice : null;
+  }
+
+  return null;
+}
+
 export function Products() {
   const navigate = useNavigate();
+  const location = useLocation();
   const session = readSession();
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchInput, setSearchInput] = useState('');
@@ -40,7 +51,10 @@ export function Products() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pending, setPending] = useState<AdminProduct | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(
+    // El formulario deja el aviso "Producto guardado" al volver a la lista.
+    () => readNoticeFromState(location.state),
+  );
   const [refreshKey, setRefreshKey] = useState(0);
 
   const query = useMemo(
@@ -161,6 +175,12 @@ export function Products() {
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <Link
+              to="/admin/products/new"
+              className={`${buttonClasses} bg-ink text-surface`}
+            >
+              Nuevo producto
+            </Link>
             <Link
               to="/admin"
               className={`${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`}

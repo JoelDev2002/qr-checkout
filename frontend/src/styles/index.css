@@ -15,3 +15,22 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/* Al imprimir (Ctrl+P) solo se ve el bloque marcado, por ejemplo el código de barras. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

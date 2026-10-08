@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom';
 import { formatBarcode, formatProductPrices, isLowStock } from '../../lib/productDisplay';
 import type { AdminProduct } from '../../types/product';
 import { ActiveToggle } from './ActiveToggle';
+
+const editLinkClasses =
+  'flex min-h-[44px] min-w-[44px] items-center rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
 type ProductListProps = {
   products: AdminProduct[];
@@ -69,6 +73,15 @@ function ProductTableRow({
           onCancel={onCancelToggle}
         />
       </td>
+      <td className="p-2">
+        <Link
+          to={`/admin/products/${product.id}`}
+          aria-label={`Editar ${product.name}`}
+          className={editLinkClasses}
+        >
+          Editar
+        </Link>
+      </td>
     </tr>
   );
 }
@@ -122,7 +135,7 @@ function ProductCard({
         </div>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <ActiveToggle
           product={product}
           busy={busy}
@@ -131,6 +144,13 @@ function ProductCard({
           onConfirm={onConfirmToggle}
           onCancel={onCancelToggle}
         />
+        <Link
+          to={`/admin/products/${product.id}`}
+          aria-label={`Editar ${product.name}`}
+          className={editLinkClasses}
+        >
+          Editar
+        </Link>
       </div>
     </li>
   );
@@ -172,6 +192,9 @@ export function ProductList({
               </th>
               <th scope="col" className="p-2 text-left">
                 Estado
+              </th>
+              <th scope="col" className="p-2 text-left">
+                Acciones
               </th>
             </tr>
           </thead>
