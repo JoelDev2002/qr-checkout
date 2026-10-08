@@ -133,6 +133,16 @@ export function login(email: string, password: string): Promise<LoginResult> {
   return post<LoginResult>('/auth/login', { email, password });
 }
 
+/** RN-14: el servidor verifica el token de Google; el navegador solo lo recibe y lo reenvía. */
+export function loginWithGoogle(credential: string): Promise<LoginResult> {
+  return post<LoginResult>('/auth/google', { credential });
+}
+
+/** Solo existe en desarrollo: fuera de eso el servidor responde 404. */
+export function devLogin(): Promise<LoginResult> {
+  return post<LoginResult>('/auth/dev-login', {});
+}
+
 export function getMe(): Promise<SessionUser> {
   return get<SessionUser>('/auth/me');
 }
