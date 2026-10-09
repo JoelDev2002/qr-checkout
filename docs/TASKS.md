@@ -68,7 +68,7 @@ Cómo usar este archivo:
   *Hecho cuando:* pruebas cubren producto inexistente, sin stock, superar el máximo, carrito bloqueado y un cambio de campaña entre dos consultas (RN-17).
 - [x] **T2.2 Pantalla del escáner del cliente.** Según `DESIGN.md` §4: visor, último producto con `PriceTag`, bloque plegable **Detalles** y contador de cantidad, barra inferior con total CMR. Crear los componentes `PriceTag`, `DetailsList` y `QuantityStepper` (RN-19). El contador espera unos 400 ms tras el último toque antes de enviar la cantidad al servidor, para no mandar una petición por cada toque.
   *Hecho cuando:* al escanear un producto se ven al instante su precio de oferta, su precio CMR (si lo tiene), la campaña aplicada y sus detalles; se agrega 1 unidad y se puede subir o bajar la cantidad con el contador o escribiéndola, sin pasar del límite.
-- [ ] **T2.3 Pantalla del carrito.** `ProductRow`, `CartSummary` con las cuatro líneas de Falabella y el ahorro CMR, cuotas informativas si ya existen (T1.4), estado vacío y botón **Vaciar carrito** con confirmación en pantalla (RN-22).
+- [x] **T2.3 Pantalla del carrito.** `ProductRow`, `CartSummary` con las cuatro líneas de Falabella y el ahorro CMR, cuotas informativas si ya existen (T1.4), estado vacío y botón **Vaciar carrito** con confirmación en pantalla (RN-22).
   *Hecho cuando:* con los seis productos de ejemplo, la pantalla muestra los cuatro montos del PRD sin errores de redondeo.
 - [ ] **T2.4 Generar y cancelar el QR.** `POST` y `DELETE /cart/qr` (ARCHITECTURE §7), bloqueo del carrito, expiración al leer, y pantalla `QrTicket` con cuenta regresiva. (API hecha; falta la pantalla)
   *Hecho cuando:* el QR contiene solo el código, editar el carrito con QR activo devuelve `CART_LOCKED`, y un QR vencido devuelve el carrito a OPEN.
@@ -89,7 +89,7 @@ Cómo usar este archivo:
 
 - [ ] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente. (API hecha; falta la pantalla)
   *Hecho cuando:* los números coinciden con las ventas de prueba.
-- [ ] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
+- [x] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
 - [ ] **T3.3 Revisión de seguridad.** Repasar `ARCHITECTURE.md` §8: límites de intentos, validaciones, roles, secretos, mensajes de error. (parte A hecha)
   *Hecho cuando:* hay una lista de verificación marcada y pruebas para los puntos críticos.
