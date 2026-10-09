@@ -25,6 +25,7 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 11. Este proyecto tiene UNA sola tienda. No existe storeId ni nada parecido. No inventes campos, tablas, rutas ni parámetros que no estén en los documentos.
 12. Nunca dejes la suite en rojo. Antes de terminar, corre la suite completa una vez y `npx tsc --noEmit` en backend. Si fallan pruebas que no son tuyas, detente y dime cuáles, sin cambiarlas.
 13. Antes de cada commit muestra `git diff --stat` y `git status`, y comprueba que solo aparezcan archivos de la tarea. No borres ni reescribas archivos existentes: edita solo las líneas necesarias.
+14. Nunca ejecutes comandos de Prisma que modifican la base o el esquema (db pull, db push, migrate dev, migrate reset). Si hace falta alguno, dime el comando y lo corro yo. migrate deploy solo contra la base de pruebas.
 
 ## Reglas que no se rompen
 1. **Dinero siempre en céntimos enteros.** Nunca `float`. Formatear solo al mostrar, con `lib/money.ts`.
@@ -69,6 +70,7 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 - Nunca guardes archivos de código con codificación ASCII. Conserva los acentos y la eñe.
 - No uses comandos de Linux en PowerShell (tail, cat, grep). Usa Select-Object, Get-Content o Select-String.
 - Si un comando o enfoque falla dos veces, detente y pregúntame. No pruebes rodeos.
+- En PowerShell NO existen head, tail, cat, wc, grep ni sed. Usa Get-Content, Select-Object -First o -Last, Select-String y Measure-Object. Si un comando falla porque no existe, no lo repitas con otra forma de Linux.
 
 ## Fuera de alcance por ahora
 Imágenes de productos, importación masiva desde la interfaz, rol vendedor, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas reales de Saga.
