@@ -80,6 +80,7 @@ Imágenes de productos, importación masiva desde la interfaz, rol vendedor, gu�
 4. Haz el commit con el mensaje que indique el prompt. Si algo falla dos veces, detente y dime qué pasó.
 5. Si algo del prompt no se puede hacer con lo que existe (una ruta de la API, un campo, una librería), detente y dime en vez de inventarlo.
 6. Termina con un resumen corto: qué hiciste, qué decisiones tomaste y qué debo probar a mano.
+7. Las pruebas del backend comparten la base qrcheckout_test: nunca corras la suite del backend mientras haya otra corriendo. Si ves fallos masivos que no tienen que ver con tu tarea, vuelve a correr la suite UNA vez antes de concluir nada y dime los dos resultados.
 
 ## Pantallas (frontend)
 - Solo frontend: no toques backend, prisma ni migraciones. Las formas EXACTAS de lo que se envía y se recibe se leen de backend/src/modules/<módulo>/schemas.ts y controller.ts. Si falta algo en la API, detente y dime; no lo inventes.
