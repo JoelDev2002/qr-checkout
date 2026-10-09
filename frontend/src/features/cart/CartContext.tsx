@@ -9,6 +9,7 @@ import {
 } from 'react';
 import {
   addCartItem,
+  cancelCartQr,
   clearCart,
   generateCartQr,
   getCart,
@@ -32,6 +33,7 @@ export type CartContextValue = {
   removeItem: (productId: number) => Promise<CartView>;
   clear: () => Promise<CartView>;
   generateQr: () => Promise<CartView>;
+  cancelQr: () => Promise<CartView>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -82,6 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem: (productId) => apply(() => removeCartItem(productId)),
       clear: () => apply(() => clearCart()),
       generateQr: () => apply(() => generateCartQr()),
+      cancelQr: () => apply(() => cancelCartQr()),
     }),
     [cart, loading, error, reload, apply],
   );

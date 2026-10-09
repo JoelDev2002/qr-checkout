@@ -16,6 +16,14 @@
   }
 }
 
+/* Borde inferior perforado del QrTicket (DESIGN §3): papel como la muesca. */
+.ticket-notch {
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 0, var(--color-paper) 5px, transparent 6px);
+  background-size: 20px 10px;
+  background-repeat: repeat-x;
+}
+
 /* Al imprimir (Ctrl+P) solo se ve el bloque marcado, por ejemplo el código de barras. */
 @media print {
   body * {

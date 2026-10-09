@@ -74,3 +74,8 @@ export function clearCart(): Promise<CartView> {
 export function generateCartQr(): Promise<CartView> {
   return post<CartView>('/cart/qr', {});
 }
+
+/** DELETE /cart/qr: cancela el QR y libera el carrito para poder editarlo de nuevo (RN-06). */
+export function cancelCartQr(): Promise<CartView> {
+  return request<CartView>('/cart/qr', { method: 'DELETE' });
+}

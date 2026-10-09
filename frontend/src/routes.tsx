@@ -12,6 +12,7 @@ import { CashierHome } from './pages/cashier/CashierHome';
 import { ComingSoon } from './pages/client/ComingSoon';
 import { ScannerPage } from './pages/client/ScannerPage';
 import { CartPage } from './pages/client/CartPage';
+import { QrPage } from './pages/client/QrPage';
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
@@ -27,8 +28,9 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <ScannerPage /> },
       { path: 'cart', element: <CartPage /> },
-      // T2.4 reemplaza este marcador por la pantalla QrTicket real.
-      { path: 'qr', element: <ComingSoon title="QR" /> },
+      { path: 'qr', element: <QrPage /> },
+      // T2.8 reemplaza este marcador por la pantalla de historial real.
+      { path: 'purchases', element: <ComingSoon title="Historial" /> },
     ],
   },
   {
