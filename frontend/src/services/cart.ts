@@ -69,3 +69,8 @@ export function removeCartItem(productId: number): Promise<CartView> {
 export function clearCart(): Promise<CartView> {
   return request<CartView>('/cart/items', { method: 'DELETE' });
 }
+
+/** POST /cart/qr: genera (o reutiliza) el QR del carrito y lo bloquea (RN-05, RN-06). */
+export function generateCartQr(): Promise<CartView> {
+  return post<CartView>('/cart/qr', {});
+}

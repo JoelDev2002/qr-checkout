@@ -10,6 +10,7 @@ import {
 import {
   addCartItem,
   clearCart,
+  generateCartQr,
   getCart,
   removeCartItem,
   setCartItemQuantity,
@@ -30,6 +31,7 @@ export type CartContextValue = {
   setQuantity: (productId: number, quantity: number) => Promise<CartView>;
   removeItem: (productId: number) => Promise<CartView>;
   clear: () => Promise<CartView>;
+  generateQr: () => Promise<CartView>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -79,6 +81,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setQuantity: (productId, quantity) => apply(() => setCartItemQuantity(productId, quantity)),
       removeItem: (productId) => apply(() => removeCartItem(productId)),
       clear: () => apply(() => clearCart()),
+      generateQr: () => apply(() => generateCartQr()),
     }),
     [cart, loading, error, reload, apply],
   );
