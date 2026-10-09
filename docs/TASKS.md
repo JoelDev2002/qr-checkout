@@ -87,7 +87,7 @@ Cómo usar este archivo:
 
 ## Sprint 3 — Dashboard, cuotas y opcionales
 
-- [x] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente.
+- [ ] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente. (API hecha; falta la pantalla)
   *Hecho cuando:* los números coinciden con las ventas de prueba.
 - [ ] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
@@ -107,4 +107,3 @@ Cómo usar este archivo:
 
 Imágenes de productos, importación masiva en la interfaz, rol vendedor, descuento regular propio por producto, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas de Saga.
 
-- [ ] **T2.4 Generar y cancelar el QR.** POST y DELETE /cart/qr (ARCHITECTURE §7), bloqueo del carrito, expiración al leer, y pantalla QrTicket con cuenta regresiva. (API hecha; falta la pantalla)
