@@ -1,30 +1,15 @@
-import { get } from './api';
+import type { PurchaseDetail, PurchaseList } from '../types/purchases';
+import { get as apiGet } from './api';
 
-export type PaymentMethod = 'CMR_CARD' | 'OTHER_CARD' | 'CASH' | 'ONLINE';
-export type PriceApplied = 'NORMAL' | 'CMR';
-export type DocType = 'TICKET' | 'BOLETA' | 'FACTURA';
+export async function getPurchases(params: { page?: number; pageSize?: number } = {}) {
+  const query = new URLSearchParams();
+  if (params.page !== undefined) query.append('page', String(params.page));
+  if (params.pageSize !== undefined) query.append('pageSize', String(params.pageSize));
+  const qs = query.toString();
+  const url = '/purchases' + (qs ? '?' + qs : '');
+  return await apiGet<PurchaseList>(url);
+}
 
-/** Lo que devuelve el backend en la lista de compras del cliente (purchases/repository.ts). */
-export type PurchaseSummary = {
-  id: number;
-  code: string;
-  receiptNumber: string;
-  createdAt: string;
-  totalCents: number;
-  paymentMethod: PaymentMethod;
-  priceApplied: PriceApplied;
-  docType: DocType;
-  deliveredAt: string | null;
-};
-
-export type PurchaseList = {
-  items: PurchaseSummary[];
-  page: number;
-  pageSize: number;
-  total: number;
-};
-
-/** GET /purchases: el historial del cliente. En el QR sirve para confirmar que se cobró. */
-export function getPurchases(): Promise<PurchaseList> {
-  return get<PurchaseList>('/purchases');
+export async function getPurchaseDetail(saleId: number) {
+  return await apiGet<PurchaseDetail>('/purchases/' + saleId);
 }

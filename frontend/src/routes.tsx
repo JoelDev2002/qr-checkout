@@ -1,4 +1,4 @@
-import type { RouteObject } from 'react-router-dom';
+﻿import type { RouteObject } from 'react-router-dom';
 import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
 import { CartProvider } from './features/cart/CartContext';
@@ -9,7 +9,9 @@ import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
-import { ComingSoon } from './pages/client/ComingSoon';
+
+import HistoryPage from './pages/client/HistoryPage';
+import HistoryDetailPage from './pages/client/HistoryDetailPage';
 import { ScannerPage } from './pages/client/ScannerPage';
 import { CartPage } from './pages/client/CartPage';
 import { QrPage } from './pages/client/QrPage';
@@ -30,7 +32,8 @@ export const routes: RouteObject[] = [
       { path: 'cart', element: <CartPage /> },
       { path: 'qr', element: <QrPage /> },
       // T2.8 reemplaza este marcador por la pantalla de historial real.
-      { path: 'purchases', element: <ComingSoon title="Historial" /> },
+      { path: 'history', element: <HistoryPage /> },
+      { path: 'history/:saleId', element: <HistoryDetailPage /> },
     ],
   },
   {
