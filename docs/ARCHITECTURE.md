@@ -18,6 +18,8 @@ Versión 1.0 · Todo se ejecuta en local (Windows) · Lenguaje: **TypeScript** e
 | React Hook Form + Zod | Formularios y validación |
 | @react-oauth/google | Botón de login con Google |
 | @vitejs/plugin-basic-ssl | HTTPS de desarrollo (la cámara lo exige) |
+| @testing-library/react + @testing-library/user-event | Pruebas de componentes de React |
+| jsdom | Entorno de DOM para las pruebas de componentes (solo archivos `.test.tsx`) |
 
 **Backend** (`backend/`)
 

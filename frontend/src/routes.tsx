@@ -1,6 +1,7 @@
 import type { RouteObject } from 'react-router-dom';
+import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
-import { Home } from './pages/Home';
+import { CartProvider } from './features/cart/CartContext';
 import { AdminHome } from './pages/admin/AdminHome';
 import { Campaigns } from './pages/admin/Campaigns';
 import { Categories } from './pages/admin/Categories';
@@ -8,10 +9,25 @@ import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
+import { ComingSoon } from './pages/client/ComingSoon';
+import { ScannerPage } from './pages/client/ScannerPage';
 
 export const routes: RouteObject[] = [
-  { path: '/', element: <Home /> },
   { path: '/login', element: <Login /> },
+  {
+    path: '/',
+    element: (
+      <RequireRole roles={['CUSTOMER']}>
+        <CartProvider>
+          <ClientLayout />
+        </CartProvider>
+      </RequireRole>
+    ),
+    children: [
+      { index: true, element: <ScannerPage /> },
+      { path: 'cart', element: <ComingSoon title="Carrito" /> },
+    ],
+  },
   {
     path: '/admin',
     element: (

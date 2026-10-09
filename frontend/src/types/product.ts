@@ -1,3 +1,5 @@
+import type { DisplayAttribute } from './category';
+
 /** Campos del producto que usa el admin de campañas (lista, chips y buscador). */
 export type ProductListItem = {
   id: number;
@@ -36,6 +38,25 @@ export type AdminProduct = {
   createdAt: string;
   updatedAt: string;
   prices: ProductPrices;
+};
+
+/** Lo que ve el cliente al escanear (GET /products/barcode/:barcode). */
+export type ScannedProduct = {
+  id: number;
+  barcode: string;
+  name: string;
+  brand: string;
+  color: string | null;
+  originalPriceCents: number;
+  offerPriceCents: number;
+  cmrPriceCents: number;
+  hasCmrDiscount: boolean;
+  campaignName: string | null;
+  /** Porcentaje de ahorro ya redondeado que calcula el servidor (RN-18). */
+  discountPercent: number;
+  details: DisplayAttribute[];
+  /** Menor entre el máximo por compra y el stock (RN-04). */
+  maxQuantity: number;
 };
 
 /** Un ajuste del historial: qué cambió, por qué, cuándo y quién lo hizo (RN-13). */

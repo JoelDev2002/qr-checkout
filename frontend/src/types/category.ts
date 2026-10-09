@@ -20,6 +20,14 @@ export type Category = {
   fields: CategoryField[];
 };
 
+/** Par etiqueta/valor de los campos de una categoría, listo para mostrar (backend domain/attributes.ts). */
+export type DisplayAttribute = {
+  key: string;
+  label: string;
+  value: string | number;
+  unit: string | null;
+};
+
 export type CreateCategoryInput = {
   name: string;
 };

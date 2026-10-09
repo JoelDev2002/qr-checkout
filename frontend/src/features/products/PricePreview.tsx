@@ -124,6 +124,7 @@ export function PricePreview({
             normalCents={preview.offerPriceCents}
             cmrCents={preview.cmrPriceCents}
             hasCmr={hasCmrDiscount}
+            discountPercent={preview.discountPercent}
             campaignName={preview.campaignName}
           />
           {hasCmrDiscount && preview.cmrSavingCents > 0 && (
