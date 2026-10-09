@@ -76,9 +76,9 @@ Cómo usar este archivo:
    *Hecho cuando:* pruebas cubren cobro correcto con CMR y sin CMR, QR vencido, doble cobro (dos peticiones seguidas cobran una sola vez), stock insuficiente que revierte todo, y una campaña que vence entre la vista previa y el cobro (se cobra con los precios vigentes en ese momento) y números de comprobante correlativos que no se repiten con cobros simultáneos.
 - [ ] **T2.6 Pantalla del cajero.** Según `DESIGN.md` §4: escaneo del QR o código manual, carrito, elección de medio de pago con las dos tarjetas de monto, tipo de comprobante y **Confirmar cobro**.
   *Hecho cuando:* se cobra un carrito de punta a punta, y con CMR se cobra el total CMR.
-- [ ] **T2.7 Comprobante.** Componente `Receipt` con estilos de impresión y la leyenda de comprobante simulado. Se muestra tras el cobro (botón **Imprimir comprobante**).
+- [x] **T2.7 Comprobante.** Componente `Receipt` con estilos de impresión y la leyenda de comprobante simulado. Se muestra tras el cobro (botón **Imprimir comprobante**).
   *Hecho cuando:* al imprimir o guardar como PDF solo aparece el comprobante.
-- [ ] **T2.8 Historial del cliente.** `GET /purchases` y `/purchases/:saleId`, con pantalla de lista y detalle que reutiliza `Receipt`.
+- [x] **T2.8 Historial del cliente.** `GET /purchases` y `/purchases/:saleId`, con pantalla de lista y detalle que reutiliza `Receipt`.
   *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba). (API hecha; falta la pantalla)
 - [ ] **T2.9 Cobros del día.** `GET /checkout/sales/today` y pantalla del cajero.
   *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual. (API hecha; falta la pantalla) (API hecha; falta la pantalla)
