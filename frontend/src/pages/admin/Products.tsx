@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ProductList } from '../../features/products/ProductList';
 import { StockAdjustmentPanel } from '../../features/products/StockAdjustment';
 import { buildProductListQuery, type ProductStatusFilter } from '../../lib/productQuery';
-import { clearSession, readSession } from '../../lib/session';
+import { readSession } from '../../lib/session';
 import { ApiError } from '../../services/api';
 import { listCategories } from '../../services/categories';
 import { listProducts, setProductActive } from '../../services/products';
@@ -36,7 +36,6 @@ function readNoticeFromState(state: unknown): string | null {
 }
 
 export function Products() {
-  const navigate = useNavigate();
   const location = useLocation();
   const session = readSession();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -171,9 +170,6 @@ export function Products() {
           <div>
             <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
             <h1 className="mt-3 text-2xl font-bold text-ink">Productos</h1>
-            <p className="mt-1 text-base text-muted">
-              {session.user.name} · Administrador
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -183,22 +179,6 @@ export function Products() {
             >
               Nuevo producto
             </Link>
-            <Link
-              to="/admin"
-              className={`${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`}
-            >
-              Volver a la administración
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                clearSession();
-                navigate('/login', { replace: true });
-              }}
-              className={`${buttonClasses} border border-line bg-surface text-ink`}
-            >
-              Cerrar sesión
-            </button>
           </div>
         </header>
 

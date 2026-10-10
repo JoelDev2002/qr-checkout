@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { CategoryForm } from '../../features/categories/CategoryForm';
 import { categoryToForm, fieldFormToCreate, fieldFormToUpdate } from '../../features/categories/converters';
 import { CategoryList } from '../../features/categories/CategoryList';
-import { clearSession, readSession } from '../../lib/session';
+import { readSession } from '../../lib/session';
 import { ApiError } from '../../services/api';
 import {
   createCategory,
@@ -25,7 +24,6 @@ function toMessage(error: unknown): string {
 }
 
 export function Categories() {
-  const navigate = useNavigate();
   const session = readSession();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,28 +133,6 @@ export function Categories() {
           <div>
             <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
             <h1 className="mt-3 text-2xl font-bold text-ink">Categorías</h1>
-            <p className="mt-1 text-base text-muted">
-              {session.user.name} · Administrador
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/admin"
-              className={`${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`}
-            >
-              Volver a la administración
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                clearSession();
-                navigate('/login', { replace: true });
-              }}
-              className={`${buttonClasses} border border-line bg-surface text-ink`}
-            >
-              Cerrar sesión
-            </button>
           </div>
         </header>
 

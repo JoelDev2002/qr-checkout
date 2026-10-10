@@ -1,11 +1,12 @@
 ﻿import type { RouteObject } from 'react-router-dom';
+import { AdminLayout } from './components/AdminLayout';
 import { CashierLayout } from './components/CashierLayout';
 import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
 import { CartProvider } from './features/cart/CartContext';
-import { AdminHome } from './pages/admin/AdminHome';
 import { Campaigns } from './pages/admin/Campaigns';
 import { Categories } from './pages/admin/Categories';
+import { Dashboard } from './pages/admin/Dashboard';
 import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
@@ -36,55 +37,24 @@ export const routes: RouteObject[] = [
       // T2.8 reemplaza este marcador por la pantalla de historial real.
       { path: 'history', element: <HistoryPage /> },
       { path: 'history/:saleId', element: <HistoryDetailPage /> },
-    ],
+],
   },
   {
     path: '/admin',
     element: (
       <RequireRole roles={['ADMIN']}>
-        <AdminHome />
+        <AdminLayout />
       </RequireRole>
     ),
-  },
-  {
-    path: '/admin/products',
-    element: (
-      <RequireRole roles={['ADMIN']}>
-        <Products />
-      </RequireRole>
-    ),
-  },
-  {
-    path: '/admin/products/new',
-    element: (
-      <RequireRole roles={['ADMIN']}>
-        <ProductFormPage />
-      </RequireRole>
-    ),
-  },
-  {
-    path: '/admin/products/:id',
-    element: (
-      <RequireRole roles={['ADMIN']}>
-        <ProductFormPage />
-      </RequireRole>
-    ),
-  },
-  {
-    path: '/admin/categories',
-    element: (
-      <RequireRole roles={['ADMIN']}>
-        <Categories />
-      </RequireRole>
-    ),
-  },
-  {
-    path: '/admin/campaigns',
-    element: (
-      <RequireRole roles={['ADMIN']}>
-        <Campaigns />
-      </RequireRole>
-    ),
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: 'dashboard', element: <Dashboard /> },
+      { path: 'products', element: <Products /> },
+      { path: 'products/new', element: <ProductFormPage /> },
+      { path: 'products/:id', element: <ProductFormPage /> },
+      { path: 'categories', element: <Categories /> },
+      { path: 'campaigns', element: <Campaigns /> },
+    ],
   },
   {
     path: '/cashier',

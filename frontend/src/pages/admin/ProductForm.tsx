@@ -8,7 +8,7 @@ import {
   buildUpdateBody,
   productToDraft,
 } from '../../lib/productForm';
-import { clearSession, readSession } from '../../lib/session';
+import { readSession } from '../../lib/session';
 import { ApiError } from '../../services/api';
 import { listCategories } from '../../services/categories';
 import {
@@ -176,28 +176,6 @@ export function ProductFormPage() {
             <h1 className="mt-3 text-2xl font-bold text-ink">
               {mode === 'create' ? 'Nuevo producto' : 'Editar producto'}
             </h1>
-            <p className="mt-1 text-base text-muted">
-              {session.user.name} · Administrador
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/admin/products"
-              className={`${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`}
-            >
-              Volver a la lista
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                clearSession();
-                navigate('/login', { replace: true });
-              }}
-              className={`${buttonClasses} border border-line bg-surface text-ink`}
-            >
-              Cerrar sesión
-            </button>
           </div>
         </header>
 

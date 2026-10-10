@@ -87,7 +87,7 @@ Cómo usar este archivo:
 
 ## Sprint 3 — Dashboard, cuotas y opcionales
 
-- [ ] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente. (API hecha; falta la pantalla)
+- [ ] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente.
   *Hecho cuando:* los números coinciden con las ventas de prueba.
 - [x] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
