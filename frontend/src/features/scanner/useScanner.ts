@@ -1,6 +1,6 @@
-import type { IScannerControls } from '@zxing/browser';
+import type { BarcodeFormat, IScannerControls } from '@zxing/browser';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { setTorch, startCamera, stopCamera, supportsTorch } from './camera';
+import { SCAN_FORMATS, setTorch, startCamera, stopCamera, supportsTorch } from './camera';
 import { isInAppBrowser } from './inAppBrowser';
 import { CAMERA_BLOCKED_MESSAGE, IN_APP_BROWSER_MESSAGE } from './messages';
 import { normalizeScanText } from './normalize';
@@ -27,7 +27,10 @@ export type UseScannerResult = {
  * normalizada con una pausa de 1 s entre ellas, la libera al desmontar y al
  * pasar a segundo plano, y no hace peticiones a la API.
  */
-export function useScanner(onScan: (text: string) => void): UseScannerResult {
+export function useScanner(
+  onScan: (text: string) => void,
+  formats: readonly BarcodeFormat[] = SCAN_FORMATS,
+): UseScannerResult {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const gateRef = useRef(createScanGate());
@@ -111,7 +114,7 @@ export function useScanner(onScan: (text: string) => void): UseScannerResult {
     const startId = (startIdRef.current += 1);
 
     try {
-      const controls = await startCamera(video, handleScanText);
+      const controls = await startCamera(video, handleScanText, formats);
       if (!mountedRef.current || startId !== startIdRef.current) {
         stopCamera(controls);
         return;
@@ -130,7 +133,7 @@ export function useScanner(onScan: (text: string) => void): UseScannerResult {
       setErrorMessage(CAMERA_BLOCKED_MESSAGE);
       updateStatus('error');
     }
-  }, [handleScanText, updateStatus]);
+  }, [formats, handleScanText, updateStatus]);
 
   useEffect(() => {
     mountedRef.current = true;

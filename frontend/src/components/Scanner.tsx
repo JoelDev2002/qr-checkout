@@ -1,9 +1,12 @@
 import { useId, useState, type FormEvent } from 'react';
+import type { BarcodeFormat } from '@zxing/browser';
 import { useScanner } from '../features/scanner/useScanner';
 
 type ScannerProps = {
   /** Recibe el texto leído o escrito, ya normalizado. El componente no llama a la API. */
   onScan: (text: string) => void;
+  /** Formatos que acepta el visor; por defecto todos (T1.13). En caja solo se pasa QR. */
+  formats?: readonly BarcodeFormat[];
 };
 
 const focusRing =
@@ -13,8 +16,8 @@ const secondaryButton = `min-h-[44px] rounded-button border border-line bg-surfa
 const torchButton = `min-h-[44px] rounded-button bg-ink px-4 text-base font-semibold text-surface motion-safe:transition-colors ${focusRing}`;
 
 /** Visor reutilizable con marco guía, linterna y entrada manual (DESIGN §3). */
-export function Scanner({ onScan }: ScannerProps) {
-  const scanner = useScanner(onScan);
+export function Scanner({ onScan, formats }: ScannerProps) {
+  const scanner = useScanner(onScan, formats);
   const [draft, setDraft] = useState('');
   const inputId = useId();
 

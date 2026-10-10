@@ -10,16 +10,20 @@ export const SCAN_FORMATS: readonly BarcodeFormat[] = [
   BarcodeFormat.QR_CODE,
 ];
 
+/** En la caja solo se lee el QR del carrito; el resto de formatos estorbaría. */
+export const QR_SCAN_FORMATS: readonly BarcodeFormat[] = [BarcodeFormat.QR_CODE];
+
 /** Abre la cámara trasera y llama a onText con cada código leído. */
 export async function startCamera(
   video: HTMLVideoElement,
   onText: (text: string) => void,
+  formats: readonly BarcodeFormat[] = SCAN_FORMATS,
 ): Promise<IScannerControls> {
   const reader = new BrowserMultiFormatReader(undefined, {
     delayBetweenScanAttempts: 250,
     delayBetweenScanSuccess: 250,
   });
-  reader.possibleFormats = [...SCAN_FORMATS];
+  reader.possibleFormats = [...formats];
 
   return reader.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } } }, video, (result) => {
     if (result !== undefined) {

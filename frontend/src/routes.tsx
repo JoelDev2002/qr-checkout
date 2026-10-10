@@ -1,4 +1,5 @@
 ﻿import type { RouteObject } from 'react-router-dom';
+import { CashierLayout } from './components/CashierLayout';
 import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
 import { CartProvider } from './features/cart/CartContext';
@@ -88,8 +89,9 @@ export const routes: RouteObject[] = [
     path: '/cashier',
     element: (
       <RequireRole roles={['CASHIER']}>
-        <CashierHome />
+        <CashierLayout />
       </RequireRole>
     ),
+    children: [{ index: true, element: <CashierHome /> }],
   },
 ];
