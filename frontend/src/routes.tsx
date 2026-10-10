@@ -10,6 +10,7 @@ import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
+import { TodaySales } from './pages/cashier/TodaySales';
 
 import HistoryPage from './pages/client/HistoryPage';
 import HistoryDetailPage from './pages/client/HistoryDetailPage';
@@ -92,6 +93,9 @@ export const routes: RouteObject[] = [
         <CashierLayout />
       </RequireRole>
     ),
-    children: [{ index: true, element: <CashierHome /> }],
+    children: [
+      { index: true, element: <CashierHome /> },
+      { path: 'today', element: <TodaySales /> },
+    ],
   },
 ];

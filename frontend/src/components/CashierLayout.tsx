@@ -39,6 +39,9 @@ export function CashierLayout() {
           <NavLink to="/cashier" end className={linkClass}>
             Cobrar
           </NavLink>
+          <NavLink to="/cashier/today" className={linkClass}>
+            Cobros de hoy
+          </NavLink>
         </nav>
       </header>
 

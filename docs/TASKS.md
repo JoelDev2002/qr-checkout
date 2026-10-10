@@ -81,7 +81,7 @@ Cómo usar este archivo:
 - [x] **T2.8 Historial del cliente.** `GET /purchases` y `/purchases/:saleId`, con pantalla de lista y detalle que reutiliza `Receipt`.
   *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba). (API hecha; falta la pantalla)
 - [ ] **T2.9 Cobros del día.** `GET /checkout/sales/today` y pantalla del cajero.
-  *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual. (API hecha; falta la pantalla) (API hecha; falta la pantalla)
+  *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual.
 - [ ] **T2.10 Pulido del flujo.** Estados de carga, vacío y error en todas las pantallas, redirecciones por rol, y revisión de accesibilidad de `DESIGN.md` §6.
   *Hecho cuando:* el flujo completo cliente → QR → cajero se puede recorrer sin instrucciones, en celular.
 
