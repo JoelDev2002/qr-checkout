@@ -86,6 +86,26 @@ export type CheckoutReject = {
   customerName: string;
 };
 
+export type SalesTodayItem = {
+  code: string;
+  receiptNumber: string;
+  createdAt: string;
+  paymentMethod: CheckoutPaymentMethod | 'ONLINE';
+  docType: CheckoutDocType;
+  totalCents: number;
+};
+
+export type SalesTodaySummary = {
+  count: number;
+  totalCents: number;
+  byPaymentMethod: Record<string, number>;
+};
+
+export type SalesTodayList = {
+  items: SalesTodayItem[];
+  summary: SalesTodaySummary;
+};
+
 /** GET /checkout/:code: vista previa del carrito con ambos totales (RN-03, RN-07). */
 export function getCheckoutPreview(code: string): Promise<CheckoutPreview> {
   return get<CheckoutPreview>(`/checkout/${encodeURIComponent(code)}`);
@@ -99,4 +119,9 @@ export function confirmCheckout(code: string, body: ConfirmCheckoutBody): Promis
 /** POST /checkout/:code/reject: devuelve el carrito a OPEN para que el cliente lo edite (RN-06). */
 export function rejectCheckout(code: string): Promise<CheckoutReject> {
   return post<CheckoutReject>(`/checkout/${encodeURIComponent(code)}/reject`, {});
+}
+
+/** GET /checkout/sales/today: cobros del día para el cajero que consulta. */
+export function getSalesToday(): Promise<SalesTodayList> {
+  return get<SalesTodayList>('/checkout/sales/today');
 }
