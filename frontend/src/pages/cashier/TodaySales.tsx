@@ -64,7 +64,7 @@ export function TodaySales() {
       {error !== null && (
         <div
           role="alert"
-          className="rounded-tag border border-warn bg-surface px-3 py-2 text-sm text-warn"
+          className="rounded-tag border border-cmr bg-surface px-3 py-2 text-sm text-cmr"
         >
           <p>{error}</p>
           <button

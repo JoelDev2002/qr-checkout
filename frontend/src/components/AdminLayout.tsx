@@ -35,7 +35,10 @@ export function AdminLayout() {
           </div>
         </div>
 
-        <nav aria-label="Secciones de administración" className="mx-auto flex max-w-5xl gap-2 px-4 pb-3">
+        <nav
+          aria-label="Secciones de administración"
+          className="mx-auto flex max-w-5xl flex-wrap gap-2 px-4 pb-3"
+        >
           <NavLink to="/admin" end className={linkClass}>
             Panel
           </NavLink>
@@ -51,7 +54,9 @@ export function AdminLayout() {
         </nav>
       </header>
 
-      <Outlet />
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        <Outlet />
+      </main>
     </div>
   );
 }

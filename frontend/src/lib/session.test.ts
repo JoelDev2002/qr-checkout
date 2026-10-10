@@ -3,6 +3,7 @@ import {
   clearSession,
   homeFor,
   isTokenExpired,
+  landingFor,
   readSession,
   saveSession,
   type Session,
@@ -126,5 +127,33 @@ describe('homeFor', () => {
     expect(homeFor('ADMIN')).toBe('/admin');
     expect(homeFor('CASHIER')).toBe('/cashier');
     expect(homeFor('CUSTOMER')).toBe('/');
+  });
+});
+
+describe('landingFor', () => {
+  const customerSession: Session = {
+    token: tokenWith({ sub: '9', role: 'CUSTOMER', exp: 4_102_444_800 }),
+    user: { id: 9, email: 'luis@gmail.com', name: 'Luis', role: 'CUSTOMER' },
+  };
+
+  it('lleva a cada rol a su inicio cuando hay sesión válida', () => {
+    expect(landingFor(adminSession)).toBe('/admin');
+    expect(landingFor(customerSession)).toBe('/');
+    expect(landingFor({ ...adminSession, user: { ...adminSession.user, role: 'CASHIER' } })).toBe(
+      '/cashier',
+    );
+  });
+
+  it('lleva al login cuando no hay sesión', () => {
+    expect(landingFor(null)).toBe('/login');
+  });
+
+  it('lleva al login cuando la sesión está vencida', () => {
+    const expired: Session = {
+      token: tokenWith({ sub: '7', role: 'ADMIN', exp: 1 }),
+      user: { id: 7, email: 'ana@falabella.com', name: 'Ana Pérez', role: 'ADMIN' },
+    };
+
+    expect(landingFor(expired)).toBe('/login');
   });
 });

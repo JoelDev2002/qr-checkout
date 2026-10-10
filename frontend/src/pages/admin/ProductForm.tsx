@@ -168,9 +168,8 @@ export function ProductFormPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-paper px-4 py-6">
-      <div className="mx-auto max-w-5xl">
-        <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+    <div>
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div>
             <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
             <h1 className="mt-3 text-2xl font-bold text-ink">
@@ -239,7 +238,6 @@ export function ProductFormPage() {
             onClose={() => setAdjusting(null)}
           />
         )}
-      </div>
-    </main>
+    </div>
   );
 }

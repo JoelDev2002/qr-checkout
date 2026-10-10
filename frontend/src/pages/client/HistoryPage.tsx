@@ -1,11 +1,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Receipt } from '../../components/Receipt';
-import { formatMoney } from '../../lib/money';
 import { formatDateLima } from '../../lib/date';
+import { formatMoney } from '../../lib/money';
 import { paymentMethodLabel } from '../../lib/payment';
-import { getPurchases, getPurchaseDetail } from '../../services/purchases';
-import type { PurchaseDetail, PurchaseSummary } from '../../types/purchases';
+import { ApiError } from '../../services/api';
+import { getPurchaseDetail, getPurchases } from '../../services/purchases';
+import type { PurchaseDetail, PurchaseDetailItem, PurchaseSummary } from '../../types/purchases';
+
+const PAGE_SIZE = 20;
+
+const primaryButton =
+  'flex min-h-[44px] w-full items-center justify-center rounded-button bg-ink px-4 text-base font-semibold text-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+const secondaryButton =
+  'flex min-h-[44px] w-full items-center justify-center rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+
+function toMessage(error: unknown): string {
+  return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+}
+
+function toDetailItems(items: PurchaseDetailItem[]) {
+  return items.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    subtotalCents: item.subtotalCents,
+  }));
+}
 
 export default function HistoryPage() {
   const [items, setItems] = useState<PurchaseSummary[]>([]);
@@ -17,29 +37,29 @@ export default function HistoryPage() {
   const [detail, setDetail] = useState<PurchaseDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailKey, setDetailKey] = useState(0);
 
-  const navigate = useNavigate();
+  const loadPage = useCallback(async (nextPage: number, replace = false) => {
+    setLoading(true);
+    setError(null);
 
-  const loadPage = useCallback(
-    async (nextPage: number, replace = false) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getPurchases({ page: nextPage, pageSize: 20 });
-        setItems((prev) => (replace ? res.items : [...prev, ...res.items]));
-        setPage(nextPage);
-        setHasMore(res.items.length >= 20 && (nextPage * 20) < res.total);
-      } catch (err: any) {
-        setError(err?.response?.data?.error?.message || err?.message || 'Error al cargar');
-      } finally {
-        setLoading(false);
+    try {
+      const result = await getPurchases({ page: nextPage, pageSize: PAGE_SIZE });
+      setItems((prev) => (replace ? result.items : [...prev, ...result.items]));
+      setPage(nextPage);
+      setHasMore(result.items.length >= PAGE_SIZE && nextPage * PAGE_SIZE < result.total);
+    } catch (caught) {
+      if (replace) {
+        setItems([]);
       }
-    },
-    [],
-  );
+      setError(toMessage(caught));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    loadPage(1, true);
+    void loadPage(1, true);
   }, [loadPage]);
 
   useEffect(() => {
@@ -48,87 +68,159 @@ export default function HistoryPage() {
       setDetailError(null);
       return;
     }
+
+    let cancelled = false;
     setDetailLoading(true);
     setDetailError(null);
-    getPurchaseDetail(selectedId)
-      .then((d) => setDetail(d))
-      .catch((err: any) => {
-        const msg = err?.response?.status === 404 ? 'No encontramos esa compra' : err?.response?.data?.error?.message || err?.message || 'Error al cargar detalle';
-        setDetailError(msg);
-      })
-      .finally(() => setDetailLoading(false));
-  }, [selectedId]);
 
-  const selectedSummary = useMemo(() => items.find((i) => i.id === selectedId) || null, [items, selectedId]);
+    getPurchaseDetail(selectedId)
+      .then((result) => {
+        if (!cancelled) {
+          setDetail(result);
+        }
+      })
+      .catch((caught: unknown) => {
+        if (!cancelled) {
+          setDetailError(toMessage(caught));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setDetailLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, detailKey]);
+
+  const selectedSummary = useMemo(
+    () => items.find((item) => item.id === selectedId) ?? null,
+    [items, selectedId],
+  );
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-ink">Historial de compras</h1>
-        <button type="button" onClick={() => navigate('/client')} className="text-sm text-ink underline">
+        <Link
+          to="/"
+          className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-ink underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        >
           Volver al inicio
-        </button>
+        </Link>
       </div>
 
-      {error && (
-        <div className="mb-3 rounded border border-line bg-white p-3 text-sm text-warn">
-          {error}
-          <button type="button" onClick={() => loadPage(page, true)} className="ml-2 underline">
+      {loading && items.length === 0 && (
+        <p role="status" className="text-base text-muted">
+          Cargando historial…
+        </p>
+      )}
+
+      {error !== null && (
+        <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+          <p className="text-sm text-cmr">{error}</p>
+          <button
+            type="button"
+            onClick={() => void loadPage(page, true)}
+            className={`${secondaryButton} mt-2`}
+          >
             Reintentar
           </button>
         </div>
       )}
 
-      {items.length === 0 && !loading && !error && <p className="text-sm text-muted">Aún no tienes compras.</p>}
+      {!loading && error === null && items.length === 0 && (
+        <section className="rounded-sheet border border-line bg-surface p-6 text-center">
+          <p className="text-base text-ink">Aún no tienes compras.</p>
+          <p className="mt-1 text-sm text-muted">Escanea productos y paga en caja para verlas aquí.</p>
+          <Link to="/" className={`${secondaryButton} mt-4`}>
+            Ir al escáner
+          </Link>
+        </section>
+      )}
 
-      <ul className="space-y-2">
-        {items.map((item) => (
-          <li key={item.id} className="rounded border border-line bg-white p-3">
-            <button type="button" onClick={() => setSelectedId(item.id)} className="w-full text-left">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-ink">{item.receiptNumber}</p>
-                  <p className="text-xs text-muted">{formatDateLima(item.createdAt)}</p>
+      {items.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {items.map((item) => (
+            <li key={item.id} className="rounded-sheet border border-line bg-surface p-3">
+              <button
+                type="button"
+                onClick={() => setSelectedId(item.id)}
+                aria-label={`Ver detalle de ${item.receiptNumber}`}
+                className="flex w-full items-start justify-between gap-3 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              >
+                <div className="min-w-0">
+                  <p className="text-base font-semibold tabular-nums text-ink">{item.receiptNumber}</p>
+                  <p className="text-sm text-muted">{formatDateLima(item.createdAt)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-ink tabular-nums">{formatMoney(item.totalCents)}</p>
-                  <p className="text-xs text-muted tabular-nums">{paymentMethodLabel(item.paymentMethod)}</p>
+                  <p className="text-base font-semibold tabular-nums text-ink">
+                    {formatMoney(item.totalCents)}
+                  </p>
+                  <p className="text-sm text-muted">{paymentMethodLabel(item.paymentMethod)}</p>
                 </div>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      {hasMore && (
-        <div className="mt-4">
-          <button type="button" onClick={() => loadPage(page + 1)} disabled={loading} className="w-full rounded border border-line bg-white py-2 text-sm font-medium text-ink disabled:opacity-50">
-            {loading ? 'Cargando...' : 'Cargar más'}
-          </button>
-        </div>
+      {hasMore && items.length > 0 && (
+        <button
+          type="button"
+          onClick={() => void loadPage(page + 1)}
+          disabled={loading}
+          className={secondaryButton}
+        >
+          {loading ? 'Cargando…' : 'Cargar más'}
+        </button>
       )}
 
       {selectedId !== null && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
-          <div className="mx-auto max-w-[360px]">
-            <div className="mb-2 flex justify-end">
-              <button type="button" onClick={() => setSelectedId(null)} className="rounded bg-white px-3 py-1 text-sm text-ink">
+          <div className="mx-auto flex w-full max-w-[360px] flex-col gap-3">
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedId(null)}
+                className="inline-flex min-h-[44px] items-center rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              >
                 Cerrar
               </button>
             </div>
-            {detailLoading && <p className="rounded bg-white p-4 text-sm text-muted">Cargando...</p>}
-            {detailError && <p className="rounded bg-white p-4 text-sm text-warn">{detailError}</p>}
-            {detail && selectedSummary && (
-              <div className="space-y-3">
+
+            {detailLoading && (
+              <p role="status" className="rounded-sheet bg-surface p-4 text-sm text-muted">
+                Cargando detalle…
+              </p>
+            )}
+
+            {detailError !== null && (
+              <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+                <p className="text-sm text-cmr">{detailError}</p>
+                <button
+                  type="button"
+                  onClick={() => setDetailKey((key) => key + 1)}
+                  className={`${secondaryButton} mt-2`}
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {detail !== null && selectedSummary !== null && (
+              <div className="flex flex-col gap-3">
                 <Receipt
                   receiptNumber={detail.receiptNumber}
                   code={detail.code}
                   createdAt={detail.createdAt}
-                  items={detail.items.map((i) => ({ name: i.name, quantity: i.quantity, subtotalCents: i.subtotalCents }))}
+                  items={toDetailItems(detail.items)}
                   totalCents={detail.totals.totalCents}
                   paymentMethod={detail.paymentMethod}
                 />
-                <button type="button" onClick={() => window.print()} className="w-full rounded border border-line bg-white py-2 text-sm font-medium text-ink">
+                <button type="button" onClick={() => window.print()} className={primaryButton}>
                   Imprimir comprobante
                 </button>
               </div>

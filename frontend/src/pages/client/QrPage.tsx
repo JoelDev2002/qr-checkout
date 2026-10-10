@@ -161,7 +161,7 @@ export function QrPage() {
       <section className="rounded-sheet border border-line bg-surface p-6 text-center">
         <h1 className="text-2xl font-bold text-saving">¡Pago confirmado!</h1>
         <p className="mt-2 text-base text-muted">Tu compra quedó registrada en tu historial.</p>
-        <Link to="/purchases" className={`${primaryButton} mt-4`}>
+        <Link to="/history" className={`${primaryButton} mt-4`}>
           Ver mi historial
         </Link>
         <Link to="/" className={`${secondaryButton} mt-3`}>

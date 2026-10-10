@@ -1,8 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Receipt } from '../../components/Receipt';
+import { ApiError } from '../../services/api';
 import { getPurchaseDetail } from '../../services/purchases';
-import type { PurchaseDetail } from '../../types/purchases';
+import type { PurchaseDetail, PurchaseDetailItem } from '../../types/purchases';
+
+const primaryButton =
+  'flex min-h-[44px] w-full items-center justify-center rounded-button bg-ink px-4 text-base font-semibold text-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+const secondaryButton =
+  'flex min-h-[44px] w-full items-center justify-center rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+
+function toMessage(error: unknown): string {
+  return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+}
+
+function toDetailItems(items: PurchaseDetailItem[]) {
+  return items.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    subtotalCents: item.subtotalCents,
+  }));
+}
 
 export default function HistoryDetailPage() {
   const { saleId } = useParams();
@@ -11,46 +29,82 @@ export default function HistoryDetailPage() {
   const [detail, setDetail] = useState<PurchaseDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (!Number.isFinite(id) || id <= 0) {
-      setError('No encontramos esa compra');
+    if (!Number.isInteger(id) || id <= 0) {
+      setError('No encontramos esa compra.');
       return;
     }
+
+    let cancelled = false;
     setLoading(true);
     setError(null);
+
     getPurchaseDetail(id)
-      .then((d) => setDetail(d))
-      .catch((err: any) => {
-        const msg = err?.response?.status === 404 ? 'No encontramos esa compra' : err?.response?.data?.error?.message || err?.message || 'Error al cargar detalle';
-        setError(msg);
+      .then((result) => {
+        if (!cancelled) {
+          setDetail(result);
+        }
       })
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch((caught: unknown) => {
+        if (!cancelled) {
+          setError(toMessage(caught));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, retryKey]);
 
   return (
-    <div className="mx-auto w-full max-w-[360px] px-4 py-4">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-ink">Detalle de compra</h1>
-        <Link to="/client/history" className="text-sm text-ink underline">
+        <Link
+          to="/history"
+          className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-ink underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        >
           Volver al historial
         </Link>
       </div>
 
-      {loading && <p className="text-sm text-muted">Cargando...</p>}
-      {error && <p className="text-sm text-warn">{error}</p>}
+      {loading && (
+        <p role="status" className="text-base text-muted">
+          Cargando detalle…
+        </p>
+      )}
 
-      {detail && (
-        <div className="space-y-3">
+      {error !== null && (
+        <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+          <p className="text-sm text-cmr">{error}</p>
+          <button
+            type="button"
+            onClick={() => setRetryKey((key) => key + 1)}
+            className={`${secondaryButton} mt-2`}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {detail !== null && (
+        <div className="flex flex-col gap-3">
           <Receipt
             receiptNumber={detail.receiptNumber}
             code={detail.code}
             createdAt={detail.createdAt}
-            items={detail.items.map((i) => ({ name: i.name, quantity: i.quantity, subtotalCents: i.subtotalCents }))}
+            items={toDetailItems(detail.items)}
             totalCents={detail.totals.totalCents}
             paymentMethod={detail.paymentMethod}
           />
-          <button type="button" onClick={() => window.print()} className="w-full rounded border border-line bg-white py-2 text-sm font-medium text-ink">
+          <button type="button" onClick={() => window.print()} className={primaryButton}>
             Imprimir comprobante
           </button>
         </div>

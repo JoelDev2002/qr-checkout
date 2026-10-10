@@ -71,6 +71,7 @@ export function CashierHome() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [attemptCode, setAttemptCode] = useState<string | null>(null);
 
   const [topChoice, setTopChoice] = useState<TopChoice | null>(null);
   const [otherChoice, setOtherChoice] = useState<OtherChoice | null>(null);
@@ -111,12 +112,14 @@ export function CashierHome() {
     setPreview(null);
     setSale(null);
     setDraft('');
+    setAttemptCode(null);
     resetCheckoutState();
   }
 
   async function loadByCode(raw: string): Promise<void> {
     const normalized = normalizeCartCode(raw);
     setMessage(null);
+    setAttemptCode(null);
 
     if (normalized === '') {
       return;
@@ -135,6 +138,7 @@ export function CashierHome() {
       resetCheckoutState();
       setPhase('ready');
     } catch (error) {
+      setAttemptCode(normalized);
       setMessage(checkoutErrorMessage(error));
     } finally {
       setLoading(false);
@@ -237,9 +241,19 @@ export function CashierHome() {
   return (
     <section className="flex flex-col gap-4">
       {message !== null && (
-        <p role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2 text-sm text-cmr">
-          {message}
-        </p>
+        <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+          <p className="text-sm text-cmr">{message}</p>
+          {attemptCode !== null && (
+            <button
+              type="button"
+              onClick={() => void loadByCode(attemptCode)}
+              disabled={loading}
+              className={`${secondaryButton} mt-2 w-full`}
+            >
+              Reintentar
+            </button>
+          )}
+        </div>
       )}
 
       {phase === 'scan' && (

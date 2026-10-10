@@ -129,3 +129,12 @@ export function homeFor(role: Role): string {
       return '/';
   }
 }
+
+/** A dónde mandar a quien cae en una ruta desconocida: a su inicio, o al login si no hay sesión. */
+export function landingFor(session: Session | null): string {
+  if (session === null || isTokenExpired(session.token)) {
+    return '/login';
+  }
+
+  return homeFor(session.user.role);
+}

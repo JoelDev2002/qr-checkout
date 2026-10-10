@@ -18,6 +18,7 @@ import HistoryDetailPage from './pages/client/HistoryDetailPage';
 import { ScannerPage } from './pages/client/ScannerPage';
 import { CartPage } from './pages/client/CartPage';
 import { QrPage } from './pages/client/QrPage';
+import { NotFound } from './pages/NotFound';
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <Login /> },
@@ -32,12 +33,11 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <ScannerPage /> },
-      { path: 'cart', element: <CartPage /> },
+{ path: 'cart', element: <CartPage /> },
       { path: 'qr', element: <QrPage /> },
-      // T2.8 reemplaza este marcador por la pantalla de historial real.
       { path: 'history', element: <HistoryPage /> },
       { path: 'history/:saleId', element: <HistoryDetailPage /> },
-],
+    ],
   },
   {
     path: '/admin',
@@ -68,4 +68,6 @@ export const routes: RouteObject[] = [
       { path: 'today', element: <TodaySales /> },
     ],
   },
+  // Cualquier ruta desconocida: cada rol ve su 404 con enlace a su inicio (T2.10).
+  { path: '*', element: <NotFound /> },
 ];

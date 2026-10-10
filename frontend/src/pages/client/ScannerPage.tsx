@@ -16,7 +16,14 @@ const secondaryButton =
 
 /** Pantalla del escáner del cliente (DESIGN §4, cliente punto 2). */
 export function ScannerPage() {
-  const { cart, addByBarcode, setQuantity: setServerQuantity, removeItem } = useCart();
+  const {
+    cart,
+    addByBarcode,
+    setQuantity: setServerQuantity,
+    removeItem,
+    error: cartError,
+    reload: reloadCart,
+  } = useCart();
   const [lastProduct, setLastProduct] = useState<ScannedProduct | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
@@ -115,6 +122,19 @@ export function ScannerPage() {
   return (
     <section className="flex flex-col gap-4">
       <Scanner onScan={(code) => void handleScan(code)} />
+
+      {cartError !== null && (
+        <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+          <p className="text-sm text-cmr">{cartError}</p>
+          <button
+            type="button"
+            onClick={() => void reloadCart()}
+            className={`${secondaryButton} mt-2 w-full`}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {message !== null && (
         <p role="alert" className="rounded-tag border border-cmr px-3 py-2 text-sm text-cmr">
