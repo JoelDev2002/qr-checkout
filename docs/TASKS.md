@@ -107,3 +107,5 @@ Cómo usar este archivo:
 
 Imágenes de productos, importación masiva en la interfaz, rol vendedor, descuento regular propio por producto, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas de Saga.
 
+- Reimprimir el comprobante de una venta pasada desde "Cobros de hoy": requiere que GET /checkout/sales/today incluya el id de cada venta y una ruta de detalle para el cajero (por ejemplo GET /checkout/sales/:saleId).
+
