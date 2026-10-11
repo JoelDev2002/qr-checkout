@@ -79,15 +79,15 @@ Cómo usar este archivo:
 - [x] **T2.7 Comprobante.** Componente `Receipt` con estilos de impresión y la leyenda de comprobante simulado. Se muestra tras el cobro (botón **Imprimir comprobante**).
   *Hecho cuando:* al imprimir o guardar como PDF solo aparece el comprobante.
 - [x] **T2.8 Historial del cliente.** `GET /purchases` y `/purchases/:saleId`, con pantalla de lista y detalle que reutiliza `Receipt`.
-  *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba). (API hecha; falta la pantalla)
-- [ ] **T2.9 Cobros del día.** `GET /checkout/sales/today` y pantalla del cajero.
+  *Hecho cuando:* un cliente solo ve sus propias compras (hay prueba).
+- [x] **T2.9 Cobros del día.** `GET /checkout/sales/today` y pantalla del cajero.
   *Hecho cuando:* la lista muestra solo los cobros de ese cajero en la fecha actual.
 - [x] **T2.10 Pulido del flujo.** Estados de carga, vacío y error en todas las pantallas, redirecciones por rol, y revisión de accesibilidad de `DESIGN.md` §6.
   *Hecho cuando:* el flujo completo cliente → QR → cajero se puede recorrer sin instrucciones, en celular.
 
 ## Sprint 3 — Dashboard, cuotas y opcionales
 
-- [ ] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente.
+- [x] **T3.1 Dashboard.** `GET /dashboard/summary` y pantalla del admin: ventas por día, más escaneados, ventas con CMR frente a otros medios, poco stock. Para "más escaneados" registrar cada lectura exitosa del cliente.
   *Hecho cuando:* los números coinciden con las ventas de prueba.
 - [x] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
