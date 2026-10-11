@@ -300,4 +300,22 @@ describe('POST /api/auth/dev-login', () => {
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
+
+  it('responde 429 con el formato de error al superar el límite de intentos', async () => {
+    const devApp = createApp({ nodeEnv: 'development', devLogin: true });
+
+    let ultima: request.Response | null = null;
+
+    for (let intento = 1; intento <= LOGIN_RATE_LIMIT_MAX + 1; intento += 1) {
+      ultima = await request(devApp).post('/api/auth/dev-login').send({});
+
+      if (intento <= LOGIN_RATE_LIMIT_MAX) {
+        expect(ultima.status).toBe(200);
+      }
+    }
+
+    expect(ultima?.status).toBe(429);
+    expect(ultima?.body.error.code).toBe('TOO_MANY_REQUESTS');
+    expect(typeof ultima?.body.error.message).toBe('string');
+  });
 });

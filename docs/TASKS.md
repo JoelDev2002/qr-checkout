@@ -91,7 +91,7 @@ Cómo usar este archivo:
   *Hecho cuando:* los números coinciden con las ventas de prueba.
 - [x] **T3.2 Cuotas en pantalla.** Mostrar las cuotas informativas del carrito (calculadas en T1.4) con opciones de 3, 6 y 12.
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
-- [ ] **T3.3 Revisión de seguridad.** Repasar `ARCHITECTURE.md` §8: límites de intentos, validaciones, roles, secretos, mensajes de error. (parte A hecha)
+- [x] **T3.3 Revisión de seguridad.** Repasar `ARCHITECTURE.md` §8: límites de intentos, validaciones, roles, secretos, mensajes de error.
   *Hecho cuando:* hay una lista de verificación marcada y pruebas para los puntos críticos.
 - [ ] **T3.4 README y guion de demo.** README con instalación en Windows, variables de entorno, cómo levantar el túnel y configurar Google, y un guion de demostración con los pasos y los códigos de barras a usar.
   *Hecho cuando:* otra persona puede levantar el proyecto siguiendo solo el README.

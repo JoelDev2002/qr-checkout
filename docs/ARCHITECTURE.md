@@ -396,6 +396,7 @@ Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intento
 - `helmet`, CORS limitado a `FRONTEND_URL` y `express-rate-limit` en login y checkout.
 - Los datos de tarjeta jamás pasan por el servidor (si se usa Culqi, se tokeniza en el navegador). En un pago en línea, el monto y el "es CMR" los decide el servidor; nunca se aceptan los que envíe el navegador.
 - Los mensajes de error no revelan detalles internos.
+- Decisión de prototipo: la sesión vive en `localStorage` (`frontend/src/lib/session.ts`) para no montar un servidor de sesión en el MVP; el token lo firma y verifica el backend. En producción convendría mover la sesión a una cookie `httpOnly` (más `Secure` y `SameSite`) para que el JavaScript del navegador no pueda leer el token; queda fuera del alcance actual.
 
 ## 9. Entorno local en Windows
 
