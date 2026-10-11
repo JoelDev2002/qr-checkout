@@ -93,7 +93,7 @@ Cómo usar este archivo:
   *Hecho cuando:* los montos coinciden con las pruebas de `installments.ts`.
 - [x] **T3.3 Revisión de seguridad.** Repasar `ARCHITECTURE.md` §8: límites de intentos, validaciones, roles, secretos, mensajes de error.
   *Hecho cuando:* hay una lista de verificación marcada y pruebas para los puntos críticos.
-- [ ] **T3.4 README y guion de demo.** README con instalación en Windows, variables de entorno, cómo levantar el túnel y configurar Google, y un guion de demostración con los pasos y los códigos de barras a usar.
+- [x] **T3.4 README y guion de demo.** README con instalación en Windows, variables de entorno, cómo levantar el túnel y configurar Google, y un guion de demostración con los pasos y los códigos de barras a usar.
   *Hecho cuando:* otra persona puede levantar el proyecto siguiendo solo el README.
 
 ### Opcionales (solo si el resto está terminado y probado)
