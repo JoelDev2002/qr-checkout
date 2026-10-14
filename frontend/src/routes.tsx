@@ -5,6 +5,7 @@ import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
 import { CartProvider } from './features/cart/CartContext';
 import { Campaigns } from './pages/admin/Campaigns';
+import { Cashiers } from './pages/admin/Cashiers';
 import { Categories } from './pages/admin/Categories';
 import { Dashboard } from './pages/admin/Dashboard';
 import { ProductFormPage } from './pages/admin/ProductForm';
@@ -54,6 +55,7 @@ export const routes: RouteObject[] = [
       { path: 'products/:id', element: <ProductFormPage /> },
       { path: 'categories', element: <Categories /> },
       { path: 'campaigns', element: <Campaigns /> },
+      { path: 'users', element: <Cashiers /> },
     ],
   },
   {
