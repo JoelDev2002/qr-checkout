@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ProductList } from '../../features/products/ProductList';
-import { StockAdjustmentPanel } from '../../features/products/StockAdjustment';
+import { StockAdjustmentModal } from '../../features/products/StockAdjustment';
 import { buildProductListQuery, type ProductStatusFilter } from '../../lib/productQuery';
 import { readSession } from '../../lib/session';
+import { toastSuccess } from '../../lib/toast';
 import { ApiError } from '../../services/api';
 import { listCategories } from '../../services/categories';
 import { listProducts, setProductActive } from '../../services/products';
@@ -25,18 +27,7 @@ function toMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Inténtalo de nuevo.';
 }
 
-function readNoticeFromState(state: unknown): string | null {
-  if (typeof state === 'object' && state !== null && 'notice' in state) {
-    const notice = (state as { notice?: unknown }).notice;
-
-    return typeof notice === 'string' ? notice : null;
-  }
-
-  return null;
-}
-
 export function Products() {
-  const location = useLocation();
   const session = readSession();
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchInput, setSearchInput] = useState('');
@@ -52,10 +43,6 @@ export function Products() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pending, setPending] = useState<AdminProduct | null>(null);
   const [adjusting, setAdjusting] = useState<AdminProduct | null>(null);
-  const [notice, setNotice] = useState<string | null>(
-    // El formulario deja el aviso "Producto guardado" al volver a la lista.
-    () => readNoticeFromState(location.state),
-  );
   const [refreshKey, setRefreshKey] = useState(0);
 
   const query = useMemo(
@@ -138,16 +125,18 @@ export function Products() {
       return;
     }
 
-    const active = !pending.active;
-    setBusyId(pending.id);
+    const product = pending;
+    const active = !product.active;
+    setBusyId(product.id);
     setLoadError(null);
 
     try {
-      await setProductActive(pending.id, active);
+      await setProductActive(product.id, active);
       setPending(null);
-      setNotice(active ? 'Producto activado' : 'Producto desactivado');
+      toastSuccess(active ? 'Producto activado' : 'Producto desactivado');
       setRefreshKey((key) => key + 1);
     } catch (error) {
+      setPending(null);
       setLoadError(toMessage(error));
     } finally {
       setBusyId(null);
@@ -261,16 +250,27 @@ export function Products() {
           <ProductList
             products={products}
             busyId={busyId}
-            pendingId={pending?.id ?? null}
             onAskToggle={handleAskToggle}
-            onConfirmToggle={() => void handleConfirmToggle()}
-            onCancelToggle={() => setPending(null)}
             onAskAdjust={setAdjusting}
           />
         )}
 
+        <ConfirmDialog
+          open={pending !== null}
+          title={pending?.active === true ? 'Desactivar producto' : 'Activar producto'}
+          message={
+            pending === null
+              ? ''
+              : `¿${pending.active ? 'Desactivar' : 'Activar'} el producto «${pending.name}»?`
+          }
+          confirmLabel={pending?.active === true ? 'Desactivar' : 'Activar'}
+          busy={busyId !== null && busyId === pending?.id}
+          onConfirm={() => void handleConfirmToggle()}
+          onCancel={() => setPending(null)}
+        />
+
         {adjusting !== null && (
-          <StockAdjustmentPanel
+          <StockAdjustmentModal
             product={adjusting}
             onChanged={() => setRefreshKey((key) => key + 1)}
             onClose={() => setAdjusting(null)}
@@ -321,12 +321,6 @@ export function Products() {
               </button>
             </div>
           </nav>
-        )}
-
-        {notice !== null && (
-          <p role="status" className="mt-4 rounded-tag bg-saving px-3 py-2 text-sm text-surface">
-            {notice}
-          </p>
         )}
     </div>
   );

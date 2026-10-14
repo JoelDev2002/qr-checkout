@@ -4,9 +4,11 @@ import { CashierLayout } from './components/CashierLayout';
 import { ClientLayout } from './components/ClientLayout';
 import { RequireRole } from './components/RequireRole';
 import { CartProvider } from './features/cart/CartContext';
+import { CampaignFormPage } from './pages/admin/CampaignForm';
 import { Campaigns } from './pages/admin/Campaigns';
 import { Cashiers } from './pages/admin/Cashiers';
 import { Categories } from './pages/admin/Categories';
+import { CategoryFormPage } from './pages/admin/CategoryForm';
 import { Dashboard } from './pages/admin/Dashboard';
 import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
@@ -54,7 +56,11 @@ export const routes: RouteObject[] = [
       { path: 'products/new', element: <ProductFormPage /> },
       { path: 'products/:id', element: <ProductFormPage /> },
       { path: 'categories', element: <Categories /> },
+      { path: 'categories/new', element: <CategoryFormPage /> },
+      { path: 'categories/:id', element: <CategoryFormPage /> },
       { path: 'campaigns', element: <Campaigns /> },
+      { path: 'campaigns/new', element: <CampaignFormPage /> },
+      { path: 'campaigns/:id', element: <CampaignFormPage /> },
       { path: 'users', element: <Cashiers /> },
     ],
   },

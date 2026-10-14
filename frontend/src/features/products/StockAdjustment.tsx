@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Modal } from '../../components/Modal';
 import {
   formatAdjustmentDateTime,
   formatSignedDelta,
@@ -7,6 +8,7 @@ import {
   validateReason,
   wouldGoNegative,
 } from '../../lib/stockAdjustment';
+import { toastSuccess } from '../../lib/toast';
 import { ApiError } from '../../services/api';
 import { adjustStock, listStockAdjustments } from '../../services/products';
 import type { AdminProduct, StockAdjustment } from '../../types/product';
@@ -21,7 +23,7 @@ const buttonClasses =
 
 const secondaryButton = `${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`;
 
-type StockAdjustmentPanelProps = {
+type StockAdjustmentModalProps = {
   product: AdminProduct;
   /** El stock nuevo que devolvió el servidor, para actualizar la lista o el formulario. */
   onChanged: (stock: number) => void;
@@ -77,15 +79,14 @@ function AdjustmentCards({ history }: { history: StockAdjustment[] }) {
   );
 }
 
-/** Ventana para ajustar el stock con motivo y ver el historial paginado (DESIGN §4, admin punto 5). */
-export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjustmentPanelProps) {
+/** Modal para ajustar el stock con motivo y ver el historial paginado (DESIGN §4, admin punto 5). */
+export function StockAdjustmentModal({ product, onChanged, onClose }: StockAdjustmentModalProps) {
   const [stock, setStock] = useState(product.stock);
   const [deltaInput, setDeltaInput] = useState('');
   const [reason, setReason] = useState('');
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const [history, setHistory] = useState<StockAdjustment[]>([]);
   const [total, setTotal] = useState(0);
@@ -151,7 +152,6 @@ export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjus
 
     setSubmitting(true);
     setSubmitError(null);
-    setSavedMessage(null);
 
     try {
       const result = await adjustStock(product.id, {
@@ -165,7 +165,7 @@ export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjus
       setAttempted(false);
       setPage(1);
       setHistoryKey((key) => key + 1);
-      setSavedMessage(`Quedó en ${result.stock} unidades.`);
+      toastSuccess('Stock ajustado', `Quedó en ${result.stock} unidades.`);
       onChanged(result.stock);
     } catch (error) {
       setSubmitError(toMessage(error));
@@ -179,22 +179,11 @@ export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjus
   const lastShown = Math.min(page * HISTORY_PAGE_SIZE, total);
 
   return (
-    <section
-      aria-label={`Ajustar stock de ${product.name}`}
-      className="mt-4 rounded-sheet border border-line bg-surface px-4 py-6"
-    >
-      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <div>
-          <h3 className="text-lg font-semibold text-ink">Ajustar stock</h3>
-          <p className="mt-1 text-base text-muted">
-            {product.name}
-            {!product.active && ' · Este producto está inactivo y su stock también se puede corregir'}
-          </p>
-        </div>
-        <button type="button" onClick={onClose} disabled={submitting} className={secondaryButton}>
-          Cerrar
-        </button>
-      </header>
+    <Modal open title="Ajustar stock" onClose={onClose} busy={submitting} size="lg">
+      <p className="mt-1 text-base text-muted">
+        {product.name}
+        {!product.active && ' · Este producto está inactivo y su stock también se puede corregir'}
+      </p>
 
       <form onSubmit={(event) => void handleSubmit(event)} noValidate className="mt-4 max-w-md">
         <p className="text-base text-ink">
@@ -254,12 +243,6 @@ export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjus
         {submitError !== null && (
           <p role="alert" className="mt-3 rounded-tag border border-cmr px-3 py-2 text-sm text-cmr">
             {submitError}
-          </p>
-        )}
-
-        {savedMessage !== null && (
-          <p role="status" className="mt-3 rounded-tag bg-saving px-3 py-2 text-sm text-surface">
-            {savedMessage}
           </p>
         )}
 
@@ -365,6 +348,6 @@ export function StockAdjustmentPanel({ product, onChanged, onClose }: StockAdjus
           </p>
         )}
       </div>
-    </section>
+    </Modal>
   );
 }

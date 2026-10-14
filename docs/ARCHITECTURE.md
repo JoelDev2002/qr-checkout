@@ -16,6 +16,7 @@ Versión 1.0 · Todo se ejecuta en local (Windows) · Lenguaje: **TypeScript** e
 | qrcode.react | Mostrar el QR del carrito |
 | JsBarcode | Dibujar códigos de barras internos para imprimir |
 | React Hook Form + Zod | Formularios y validación |
+| Sileo | Avisos (toasts) de resultado en el frontend |
 | @react-oauth/google | Botón de login con Google |
 | @vitejs/plugin-basic-ssl | HTTPS de desarrollo (la cámara lo exige) |
 | @testing-library/react + @testing-library/user-event | Pruebas de componentes de React |

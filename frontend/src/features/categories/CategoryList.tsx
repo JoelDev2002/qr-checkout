@@ -7,10 +7,11 @@ type CategoryListProps = {
   categories: Category[];
   busyId: number | null;
   onEdit: (category: Category) => void;
-  onToggleActive: (category: Category, active: boolean) => void;
+  /** Pide confirmación en un modal antes de cambiar el estado (RN-12). */
+  onAsk: (category: Category) => void;
 };
 
-export function CategoryList({ categories, busyId, onEdit, onToggleActive }: CategoryListProps) {
+export function CategoryList({ categories, busyId, onEdit, onAsk }: CategoryListProps) {
   return (
     <div className="overflow-x-auto rounded-tag border border-line">
       <table className="w-full min-w-[40rem] border-collapse bg-surface text-base">
@@ -44,7 +45,7 @@ export function CategoryList({ categories, busyId, onEdit, onToggleActive }: Cat
                     role="switch"
                     aria-checked={category.active}
                     aria-label={`Categoría ${category.name}: ${category.active ? 'activa' : 'inactiva'}`}
-                    onClick={() => onToggleActive(category, !category.active)}
+                    onClick={() => onAsk(category)}
                     disabled={busy}
                     className={`${buttonClasses} flex items-center gap-2`}
                   >

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { PasswordInput } from '../../components/PasswordInput';
 import { readGoogleCredential } from '../../features/auth/googleCredential';
 import { homeFor, isTokenExpired, readSession, saveSession } from '../../lib/session';
 import { ApiError, devLogin, login, loginWithGoogle } from '../../services/api';
@@ -171,13 +172,11 @@ export function Login() {
             <label htmlFor="password" className="block text-sm font-semibold text-ink">
               Contraseña
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="current-password"
-              aria-invalid={fieldErrors.password !== undefined}
-              {...register('password')}
-              className={`mt-2 ${inputClasses}`}
+              registration={register('password')}
+              invalid={fieldErrors.password !== undefined}
             />
             {fieldErrors.password !== undefined && (
               <p className="mt-1 text-sm text-cmr">{fieldErrors.password}</p>

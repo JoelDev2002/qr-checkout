@@ -9,38 +9,12 @@ type ActiveToggleTarget = {
 type ActiveToggleProps = {
   product: ActiveToggleTarget;
   busy: boolean;
-  /** true cuando el admin puso el interruptor y aún no confirmó en esta misma pantalla. */
-  awaiting: boolean;
+  /** Pide confirmación en un modal antes de cambiar el estado (RN-12). */
   onAsk: () => void;
-  onConfirm: () => void;
-  onCancel: () => void;
 };
 
-/** RN-12: activar o desactivar un producto, siempre con confirmación en la misma pantalla. */
-export function ActiveToggle({ product, busy, awaiting, onAsk, onConfirm, onCancel }: ActiveToggleProps) {
-  if (awaiting) {
-    const action = product.active ? 'Desactivar' : 'Activar';
-
-    return (
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-ink">
-          ¿{action} «{product.name}»?
-        </span>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={busy}
-          className={`${buttonClasses} bg-ink text-surface`}
-        >
-          Sí, {action.toLowerCase()}
-        </button>
-        <button type="button" onClick={onCancel} disabled={busy} className={buttonClasses}>
-          No
-        </button>
-      </div>
-    );
-  }
-
+/** RN-12: activar o desactivar un producto, siempre con confirmación. */
+export function ActiveToggle({ product, busy, onAsk }: ActiveToggleProps) {
   return (
     <button
       type="button"

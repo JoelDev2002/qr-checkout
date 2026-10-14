@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ProductForm } from '../../features/products/ProductForm';
-import { StockAdjustmentPanel } from '../../features/products/StockAdjustment';
+import { StockAdjustmentModal } from '../../features/products/StockAdjustment';
 import type { ProductFormMode, ProductFormValues } from '../../features/products/schema';
 import {
   buildCreateBody,
@@ -9,6 +9,7 @@ import {
   productToDraft,
 } from '../../lib/productForm';
 import { readSession } from '../../lib/session';
+import { toastSuccess } from '../../lib/toast';
 import { ApiError } from '../../services/api';
 import { listCategories } from '../../services/categories';
 import {
@@ -128,7 +129,8 @@ export function ProductFormPage() {
         await updateProduct(editingId, buildUpdateBody(values, fields, { discardAttributes }));
       }
 
-      navigate('/admin/products', { state: { notice: 'Producto guardado' } });
+      toastSuccess('Producto guardado');
+      navigate('/admin/products');
     } catch (error) {
       if (!(error instanceof ApiError)) {
         setSubmitError('Ocurrió un error inesperado. Inténtalo de nuevo.');
@@ -230,7 +232,7 @@ export function ProductFormPage() {
         )}
 
         {adjusting !== null && (
-          <StockAdjustmentPanel
+          <StockAdjustmentModal
             product={adjusting}
             onChanged={(stock) =>
               setProduct((current) => (current === null ? current : { ...current, stock }))

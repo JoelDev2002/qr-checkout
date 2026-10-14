@@ -1,5 +1,6 @@
 import type { Resolver } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
+import { PasswordInput } from '../../components/PasswordInput';
 import { cashierResolver } from './resolver';
 import type { CashierFormValues } from './schema';
 
@@ -74,13 +75,11 @@ export function CashierForm({ onSubmit, onCancel, submitting, submitError }: Cas
         <label htmlFor="cashier-password" className="block text-sm font-semibold text-ink">
           Contraseña
         </label>
-        <input
+        <PasswordInput
           id="cashier-password"
-          type="password"
           autoComplete="new-password"
-          {...register('password')}
-          aria-invalid={errors.password !== undefined}
-          className={inputClasses}
+          registration={register('password')}
+          invalid={errors.password !== undefined}
         />
         {errors.password !== undefined && (
           <p className="mt-1 text-sm text-cmr">{errors.password.message}</p>

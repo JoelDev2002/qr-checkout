@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { CashierForm } from '../../features/users/CashierForm';
 import { CashierList } from '../../features/users/CashierList';
 import { readSession } from '../../lib/session';
+import { toastSuccess } from '../../lib/toast';
 import { ApiError } from '../../services/api';
 import { createCashier, listCashiers, setCashierActive } from '../../services/users';
 import type { CashierFormValues } from '../../features/users/schema';
@@ -20,11 +22,10 @@ export function Cashiers() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
-  const [confirmingId, setConfirmingId] = useState<number | null>(null);
+  const [pending, setPending] = useState<Cashier | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -45,7 +46,6 @@ export function Cashiers() {
 
   function openForm() {
     setFormError(null);
-    setNotice(null);
     setShowForm(true);
   }
 
@@ -54,16 +54,22 @@ export function Cashiers() {
     setFormError(null);
   }
 
-  async function handleConfirm(cashier: Cashier) {
+  async function handleConfirm() {
+    if (pending === null) {
+      return;
+    }
+
+    const cashier = pending;
     setBusyId(cashier.id);
     setLoadError(null);
 
     try {
       await setCashierActive(cashier.id, { active: !cashier.active });
-      setConfirmingId(null);
-      setNotice(cashier.active ? 'Cajero desactivado' : 'Cajero activado');
+      setPending(null);
+      toastSuccess(cashier.active ? 'Cajero desactivado' : 'Cajero activado');
       await load();
     } catch (error) {
+      setPending(null);
       setLoadError(toMessage(error));
     } finally {
       setBusyId(null);
@@ -73,11 +79,10 @@ export function Cashiers() {
   async function handleSave(values: CashierFormValues) {
     setSubmitting(true);
     setFormError(null);
-    setNotice(null);
 
     try {
       await createCashier(values);
-      setNotice('Cajero creado');
+      toastSuccess('Cajero creado');
       closeForm();
       await load();
     } catch (error) {
@@ -133,19 +138,20 @@ export function Cashiers() {
           <CashierList
             cashiers={cashiers}
             busyId={busyId}
-            confirmingId={confirmingId}
-            onAsk={(cashier) => setConfirmingId(cashier.id)}
-            onConfirm={(cashier) => void handleConfirm(cashier)}
-            onCancel={() => setConfirmingId(null)}
+            onAsk={setPending}
           />
         </div>
       )}
 
-      {notice !== null && (
-        <p role="status" className="mt-4 rounded-tag bg-saving px-3 py-2 text-sm text-surface">
-          {notice}
-        </p>
-      )}
+      <ConfirmDialog
+        open={pending !== null}
+        title={pending?.active === true ? 'Desactivar cajero' : 'Activar cajero'}
+        message={pending === null ? '' : `¿${pending.active ? 'Desactivar' : 'Activar'} a «${pending.name}»?`}
+        confirmLabel={pending?.active === true ? 'Desactivar' : 'Activar'}
+        busy={busyId !== null && busyId === pending?.id}
+        onConfirm={() => void handleConfirm()}
+        onCancel={() => setPending(null)}
+      />
 
       {showForm && (
         <CashierForm

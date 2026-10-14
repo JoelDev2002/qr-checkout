@@ -151,10 +151,10 @@ Las dos tarjetas de monto funcionan como opciones excluyentes (el medio de pago 
    6. **Vista previa de precios** con `PriceTag`, calculada por el servidor: muestra el precio de oferta (con la campaña que gane, si la hay) y el precio CMR.
    7. Stock y máximo por compra.
    Errores en línea, por ejemplo: "El porcentaje debe ser mayor que 0 y hasta 90."
-3. **Categorías**: lista con estado. El formulario tiene el nombre, el estado y la sección **Campos adicionales**: tabla ordenable con nombre visible, tipo, obligatorio, opciones (si es lista) y unidad (si es número). Aviso: "Los campos no se borran, solo se desactivan. Su tipo no se puede cambiar después de crearlos."
-4. **Campañas**: lista con estado (Vigente, Programada, Vencida, Inactiva), prioridad y un interruptor para activar o desactivar cada una. El formulario tiene: nombre; **alcance** (Productos concretos, Categorías o Toda la tienda) con su selector (búsqueda de productos o lista de categorías); **tipo de descuento** (Porcentaje o Monto fijo en S/ por unidad) y su valor; **prioridad** (número, mayor gana); y fechas de inicio y fin. Muestra "Afecta a N productos" y, si otra campaña alcanza a los mismos productos, el aviso "Algunos productos ya tienen otra campaña; se aplicará la de mayor prioridad." Si un monto fijo iguala o supera el precio de algún producto, avisa cuántos quedarían sin descuento.
-5. **Ajuste de stock**: ventana con cantidad (positiva o negativa) y motivo obligatorio. Debajo, historial de ajustes.
-6. **Cajeros**: lista, crear, desactivar.
+3. **Categorías**: lista con estado y un interruptor que pide confirmación en un modal antes de activar o desactivar. **Nueva categoría** y **Editar** abren una pantalla aparte. Su formulario tiene el nombre, el estado y la sección **Campos adicionales**: tabla ordenable con nombre visible, tipo, obligatorio, opciones (si es lista) y unidad (si es número). Aviso: "Los campos no se borran, solo se desactivan. Su tipo no se puede cambiar después de crearlos."
+4. **Campañas**: lista con estado (Vigente, Programada, Vencida, Inactiva), prioridad y un interruptor que pide confirmación en un modal antes de activar o desactivar cada una. **Nueva campaña** y **Editar** abren una pantalla aparte. Su formulario tiene: nombre; **alcance** (Productos concretos, Categorías o Toda la tienda) con su selector (búsqueda de productos o lista de categorías); **tipo de descuento** (Porcentaje o Monto fijo en S/ por unidad) y su valor; **prioridad** (número, mayor gana); y fechas de inicio y fin. Muestra "Afecta a N productos" y, si otra campaña alcanza a los mismos productos, el aviso "Algunos productos ya tienen otra campaña; se aplicará la de mayor prioridad." Si un monto fijo iguala o supera el precio de algún producto, avisa cuántos quedarían sin descuento.
+5. **Ajuste de stock**: ventana modal con cantidad (positiva o negativa) y motivo obligatorio. Debajo, historial de ajustes.
+6. **Cajeros**: lista, crear y un interruptor que pide confirmación en un modal antes de activar o desactivar.
 7. **Dashboard**: ventas por día, productos más escaneados, ventas con CMR frente a otros medios, productos con poco stock. Gráficos simples con tablas de respaldo.
 
 ## 5. Textos
@@ -168,6 +168,11 @@ Frases en español, oración normal, verbos activos, y la misma acción con el m
 | Generar QR | Generar QR para caja | — |
 | Cobrar | Confirmar cobro | "Cobro confirmado" |
 | Guardar producto | Guardar producto | "Producto guardado" |
+| Activar / Desactivar | Activar / Desactivar | "¿Activar «{nombre}»?" (confirmación en un modal) |
+| Ajustar stock | Ajustar stock | "Stock ajustado" |
+| Mostrar contraseña | Ícono de ojo (muestra / oculta, se alterna) | — |
+
+Los resultados de una acción (guardar, activar, ajustar) aparecen como un aviso breve (toast) en la esquina superior derecha; las acciones que cambian el estado de un producto, categoría, campaña o cajero piden antes una confirmación en un modal.
 
 **Errores** (qué pasó y qué hacer):
 - Producto inexistente: "No encontramos este producto. Escribe el código a mano o pide ayuda a un vendedor."

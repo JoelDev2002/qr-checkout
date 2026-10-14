@@ -7,21 +7,11 @@ const buttonClasses =
 type CashierListProps = {
   cashiers: Cashier[];
   busyId: number | null;
-  /** Cajero cuyo interruptor se pulsó y aún no se confirmó en esta misma pantalla. */
-  confirmingId: number | null;
+  /** Pide confirmación en un modal antes de cambiar el estado (RN-12). */
   onAsk: (cashier: Cashier) => void;
-  onConfirm: (cashier: Cashier) => void;
-  onCancel: () => void;
 };
 
-export function CashierList({
-  cashiers,
-  busyId,
-  confirmingId,
-  onAsk,
-  onConfirm,
-  onCancel,
-}: CashierListProps) {
+export function CashierList({ cashiers, busyId, onAsk }: CashierListProps) {
   return (
     <div className="overflow-x-auto rounded-tag border border-line">
       <table className="w-full min-w-[40rem] border-collapse bg-surface text-base">
@@ -45,48 +35,27 @@ export function CashierList({
         <tbody>
           {cashiers.map((cashier) => {
             const busy = busyId === cashier.id;
-            const confirming = confirmingId === cashier.id;
-            const action = cashier.active ? 'Desactivar' : 'Activar';
 
             return (
               <tr key={cashier.id} className="border-t border-line">
                 <td className="p-2">{cashier.name}</td>
                 <td className="p-2">{cashier.email}</td>
                 <td className="p-2">
-                  {confirming ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm text-ink">
-                        ¿{action} a «{cashier.name}»?
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onConfirm(cashier)}
-                        disabled={busy}
-                        className={`${buttonClasses} bg-ink text-surface`}
-                      >
-                        Sí, {action.toLowerCase()}
-                      </button>
-                      <button type="button" onClick={onCancel} disabled={busy} className={buttonClasses}>
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={cashier.active}
-                      aria-label={`Cajero ${cashier.name}: ${cashier.active ? 'activo' : 'inactivo'}`}
-                      onClick={() => onAsk(cashier)}
-                      disabled={busy}
-                      className={`${buttonClasses} flex items-center gap-2`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`h-4 w-8 rounded-full ${cashier.active ? 'bg-saving' : 'bg-line'}`}
-                      />
-                      <span>{cashier.active ? 'Activo' : 'Inactivo'}</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={cashier.active}
+                    aria-label={`Cajero ${cashier.name}: ${cashier.active ? 'activo' : 'inactivo'}`}
+                    onClick={() => onAsk(cashier)}
+                    disabled={busy}
+                    className={`${buttonClasses} flex items-center gap-2`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`h-4 w-8 rounded-full ${cashier.active ? 'bg-saving' : 'bg-line'}`}
+                    />
+                    <span>{cashier.active ? 'Activo' : 'Inactivo'}</span>
+                  </button>
                 </td>
                 <td className="p-2">{formatDateLima(cashier.createdAt)}</td>
               </tr>

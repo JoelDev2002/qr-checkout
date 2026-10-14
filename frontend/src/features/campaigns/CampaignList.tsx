@@ -13,7 +13,8 @@ type CampaignListProps = {
   productNames: Map<number, string>;
   categoryNames: Map<number, string>;
   busyId: number | null;
-  onToggleActive: (campaign: Campaign, active: boolean) => void;
+  /** Pide confirmación en un modal antes de cambiar el estado (RN-12). */
+  onAsk: (campaign: Campaign) => void;
   onEdit: (campaign: Campaign) => void;
 };
 
@@ -49,7 +50,7 @@ type CampaignListRowProps = {
   productNames: Map<number, string>;
   categoryNames: Map<number, string>;
   busy: boolean;
-  onToggleActive: (campaign: Campaign, active: boolean) => void;
+  onAsk: (campaign: Campaign) => void;
   onEdit: (campaign: Campaign) => void;
 };
 
@@ -58,7 +59,7 @@ function CampaignListRow({
   productNames,
   categoryNames,
   busy,
-  onToggleActive,
+  onAsk,
   onEdit,
 }: CampaignListRowProps) {
   return (
@@ -84,7 +85,7 @@ function CampaignListRow({
             role="switch"
             aria-checked={campaign.active}
             aria-label={`Campaña ${campaign.name}: ${campaign.active ? 'activa' : 'inactiva'}`}
-            onClick={() => onToggleActive(campaign, !campaign.active)}
+            onClick={() => onAsk(campaign)}
             disabled={busy}
             className={`${buttonClasses} flex items-center gap-2`}
           >
@@ -113,7 +114,7 @@ export function CampaignList({
   productNames,
   categoryNames,
   busyId,
-  onToggleActive,
+  onAsk,
   onEdit,
 }: CampaignListProps) {
   return (
@@ -153,7 +154,7 @@ export function CampaignList({
               productNames={productNames}
               categoryNames={categoryNames}
               busy={busyId === campaign.id}
-              onToggleActive={onToggleActive}
+              onAsk={onAsk}
               onEdit={onEdit}
             />
           ))}

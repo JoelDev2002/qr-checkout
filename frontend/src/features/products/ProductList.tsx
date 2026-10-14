@@ -9,32 +9,18 @@ const editLinkClasses =
 type ProductListProps = {
   products: AdminProduct[];
   busyId: number | null;
-  pendingId: number | null;
   onAskToggle: (product: AdminProduct) => void;
-  onConfirmToggle: () => void;
-  onCancelToggle: () => void;
   onAskAdjust: (product: AdminProduct) => void;
 };
 
 type ProductRowProps = {
   product: AdminProduct;
   busy: boolean;
-  awaiting: boolean;
   onAskToggle: (product: AdminProduct) => void;
-  onConfirmToggle: () => void;
-  onCancelToggle: () => void;
   onAskAdjust: (product: AdminProduct) => void;
 };
 
-function ProductTableRow({
-  product,
-  busy,
-  awaiting,
-  onAskToggle,
-  onConfirmToggle,
-  onCancelToggle,
-  onAskAdjust,
-}: ProductRowProps) {
+function ProductTableRow({ product, busy, onAskToggle, onAskAdjust }: ProductRowProps) {
   const cells = formatProductPrices(product);
 
   return (
@@ -67,14 +53,7 @@ function ProductTableRow({
         )}
       </td>
       <td className="p-2">
-        <ActiveToggle
-          product={product}
-          busy={busy}
-          awaiting={awaiting}
-          onAsk={() => onAskToggle(product)}
-          onConfirm={onConfirmToggle}
-          onCancel={onCancelToggle}
-        />
+        <ActiveToggle product={product} busy={busy} onAsk={() => onAskToggle(product)} />
       </td>
       <td className="p-2">
         <div className="flex flex-wrap gap-2">
@@ -98,15 +77,7 @@ function ProductTableRow({
   );
 }
 
-function ProductCard({
-  product,
-  busy,
-  awaiting,
-  onAskToggle,
-  onConfirmToggle,
-  onCancelToggle,
-  onAskAdjust,
-}: ProductRowProps) {
+function ProductCard({ product, busy, onAskToggle, onAskAdjust }: ProductRowProps) {
   const cells = formatProductPrices(product);
 
   return (
@@ -149,14 +120,7 @@ function ProductCard({
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <ActiveToggle
-          product={product}
-          busy={busy}
-          awaiting={awaiting}
-          onAsk={() => onAskToggle(product)}
-          onConfirm={onConfirmToggle}
-          onCancel={onCancelToggle}
-        />
+        <ActiveToggle product={product} busy={busy} onAsk={() => onAskToggle(product)} />
         <Link
           to={`/admin/products/${product.id}`}
           aria-label={`Editar ${product.name}`}
@@ -177,15 +141,7 @@ function ProductCard({
 }
 
 /** En escritorio es una tabla; desde 640 px para abajo cada producto es una tarjeta apilada. */
-export function ProductList({
-  products,
-  busyId,
-  pendingId,
-  onAskToggle,
-  onConfirmToggle,
-  onCancelToggle,
-  onAskAdjust,
-}: ProductListProps) {
+export function ProductList({ products, busyId, onAskToggle, onAskAdjust }: ProductListProps) {
   return (
     <div className="mt-4">
       <div className="hidden overflow-x-auto rounded-tag border border-line sm:block">
@@ -225,10 +181,7 @@ export function ProductList({
                 key={product.id}
                 product={product}
                 busy={busyId === product.id}
-                awaiting={pendingId === product.id}
                 onAskToggle={onAskToggle}
-                onConfirmToggle={onConfirmToggle}
-                onCancelToggle={onCancelToggle}
                 onAskAdjust={onAskAdjust}
               />
             ))}
@@ -242,10 +195,7 @@ export function ProductList({
             key={product.id}
             product={product}
             busy={busyId === product.id}
-            awaiting={pendingId === product.id}
             onAskToggle={onAskToggle}
-            onConfirmToggle={onConfirmToggle}
-            onCancelToggle={onCancelToggle}
             onAskAdjust={onAskAdjust}
           />
         ))}
