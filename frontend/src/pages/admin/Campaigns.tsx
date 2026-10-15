@@ -13,7 +13,7 @@ import type { Category } from '../../types/category';
 import type { ProductListItem } from '../../types/product';
 
 const buttonClasses =
-  'min-h-[44px] rounded-button px-4 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
+  'flex items-center min-h-[44px] rounded-button px-4 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
 function toMessage(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Ocurrió un error inesperado. Inténtalo de nuevo.';
