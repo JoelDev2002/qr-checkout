@@ -34,11 +34,11 @@ Versión 1.0 · Todo se ejecuta en local (Windows) · Lenguaje: **TypeScript** e
 | helmet, cors, express-rate-limit | Seguridad básica |
 | nanoid | Código corto del carrito |
 | csv-parse | Leer el CSV de la semilla de productos |
-| Culqi (API REST con `fetch`, sin SDK; solo si se hace la parte opcional) | Cobro con tarjeta en modo pruebas; el Custom Checkout se carga desde `js.culqi.com` solo en la pantalla de pago |
+| Mercado Pago (API REST con `fetch`, sin SDK en el backend) | Cobro con tarjeta en modo pruebas; el Card Payment Brick se carga desde `sdk.mercadopago.com/js/v2` solo en la pantalla de pago |
 
 **Pruebas:** Vitest (lógica y componentes) y Supertest (API).
 
-Culqi se integra sin SDK: el backend llama a su API REST con `fetch` usando la llave secreta (solo en el servidor), y el Custom Checkout se carga desde `js.culqi.com` únicamente cuando el cliente abre la pantalla de pago.
+Mercado Pago se integra sin SDK: el backend llama a su API REST con `fetch` usando el Access Token (solo en el servidor), y el script MercadoPago.js (`sdk.mercadopago.com/js/v2`) se carga únicamente cuando el cliente abre la pantalla de pago.
 
 No añadir dependencias fuera de esta lista sin consultarlo.
 
@@ -60,7 +60,7 @@ qrcheckout/
 │   │   │   ├── installments.ts   cuotas informativas
 │   │   │   ├── barcode.ts        validar EAN-13 y generar códigos internos
 │   │   │   └── cartCode.ts       generar código corto
-│   │   ├── infrastructure/   (prisma.ts, jwt.ts, googleAuth.ts, culqi.ts)
+│   │   ├── infrastructure/   (prisma.ts, jwt.ts, googleAuth.ts, mercadoPago.ts)
 │   │   ├── middlewares/      (auth, roles, validate, errorHandler)
 │   │   └── modules/          (auth, users, categories, campaigns, products, carts, checkout, purchases, dashboard, payments)
 │   │       └── <módulo>/     routes.ts, controller.ts, service.ts, repository.ts, schemas.ts
@@ -119,7 +119,7 @@ enum DocType       { TICKET BOLETA FACTURA }
 enum FieldType     { TEXT NUMBER SELECT BOOLEAN }
 enum DiscountType   { PERCENT FIXED }
 enum CampaignScope  { PRODUCTS CATEGORIES STORE }
-enum PaymentAttemptStatus { CREATED FAILED CHARGED SALE_CREATED REFUNDED REFUND_FAILED UNKNOWN }
+enum PaymentAttemptStatus { CREATED FAILED CHARGED SALE_CREATED REFUNDED REFUND_FAILED UNKNOWN IN_PROCESS }
 
 model User {
   id           Int               @id @default(autoincrement())
@@ -277,7 +277,7 @@ model Sale {
   cardBrand          String?       // solo pagos en línea
   cardLast4          String?
   cardIssuer         String?
-  culqiChargeId      String?
+  mpPaymentId        String?
   deliveredAt        DateTime?
   createdAt          DateTime      @default(now())
   items              SaleItem[]
@@ -302,7 +302,7 @@ model SaleItem {
 
 model PaymentAttempt {
   id            Int                  @id @default(autoincrement())
-  tokenId       String               @unique // token de Culqi, de un solo uso
+  tokenId       String               @unique // token de Mercado Pago, de un solo uso
   cartId        Int
   cart          Cart                 @relation(fields: [cartId], references: [id])
   customerId    Int
@@ -310,7 +310,7 @@ model PaymentAttempt {
   amountCents   Int
   isCmr         Boolean
   status        PaymentAttemptStatus @default(CREATED)
-  culqiChargeId String?
+  mpPaymentId   String?
   failureCode   String?
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
@@ -369,8 +369,8 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | GET `/checkout/sales/today` | cajero | Cobros del día |
 | GET, POST, PATCH `/users` | admin | Gestión de cajeros |
 | GET `/dashboard/summary` | admin | Métricas por rango de fechas |
-| POST `/payments/online/preview` | cliente | Opcional: recibe el token de Culqi, consulta a Culqi los datos de la tarjeta, decide si es CMR (`CMR_BINS`) y devuelve el monto exacto a pagar |
-| POST `/payments/online` | cliente | Opcional: cobra con Culqi el monto decidido por el servidor y crea la venta (sección 7) |
+| POST `/payments/online/preview` | cliente | Recibe el token de Mercado Pago, obtiene de él el BIN, la marca, el emisor y los últimos 4 dígitos, decide si es CMR (`CMR_BINS`) y devuelve el monto exacto a pagar (sección 7) |
+| POST `/payments/online` | cliente | Cobra con Mercado Pago el monto decidido por el servidor y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |
 
 Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_TOKEN_INVALID`, `PAYMENT_NOT_CONFIGURED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
@@ -397,17 +397,18 @@ Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE
 
 Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intentos por usuario, para que nadie pueda adivinar códigos.
 
-**Pago en línea** (opcional: `POST /payments/online/preview` y `POST /payments/online`)
-1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y pulsa **Pagar con tarjeta**. El navegador abre el Custom Checkout de Culqi, donde se escribe la tarjeta; esos datos nunca pasan por nuestro servidor. Culqi devuelve un token que vive 5 minutos y sirve una sola vez.
-2. **Vista previa:** el navegador envía solo el token y los datos del comprobante a `POST /payments/online/preview`. El servidor consulta el token contra Culqi con la llave secreta (no usa lo que diga el navegador), lee el BIN, la marca, el emisor y los últimos 4 dígitos, y decide si es CMR comparando el BIN con `CMR_BINS`; ante cualquier duda, no es CMR. Devuelve el monto exacto (total CMR si es CMR; si no, total de oferta) y los datos de la tarjeta. No cobra ni guarda nada.
-3. El cliente ve "Detectamos una tarjeta CMR. Pagarás S/ X" o "Esta tarjeta no es CMR. Pagarás S/ Y" y confirma.
-4. **Cobro:** el navegador llama a `POST /payments/online` con el mismo token, el comprobante y `expectedAmountCents`. El servidor vuelve a consultar el token y a recalcular; si el monto no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo. Valida que el carrito esté OPEN, con ítems, sin QR activo y con stock, y valida el comprobante.
-5. Antes de cobrar crea un `PaymentAttempt` en estado `CREATED` con `tokenId` único. Si el token ya fue usado, devuelve el resultado anterior sin cobrar de nuevo.
-6. Cobra a Culqi con `POST /v2/charges`, con el monto en céntimos enteros, `currency_code` PEN, el correo del token, `source_id` y metadata con `attemptId` y `cartId`. Si Culqi rechaza, el attempt queda `FAILED` y se responde `402 PAYMENT_DECLINED`, sin cambiar el stock ni el carrito.
-7. Aprobado: el attempt pasa a `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor y `culqiChargeId`, y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
-8. Si la transacción falla después de haber cobrado: se reembolsa en Culqi y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
-9. Si el cobro agota el tiempo de espera o hay un error de red: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`.
-10. Nunca se guardan el número completo, el CVV ni el vencimiento. La llave secreta de Culqi solo vive en el servidor.
+**Pago en línea** (`POST /payments/online/preview` y `POST /payments/online`)
+1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y pulsa **Pagar con tarjeta**. El navegador muestra el Card Payment Brick de Mercado Pago, donde se escribe la tarjeta; esos datos nunca pasan por nuestro servidor. Al enviarlo, el Brick entrega un token de un solo uso y datos como `payment_method_id` e `issuer_id`.
+2. **Vista previa:** el navegador envía solo el token y los datos del comprobante a `POST /payments/online/preview`. El servidor obtiene el BIN, la marca, el emisor y los últimos 4 dígitos del token con el mecanismo que se compruebe en la T3.5a (no se inventa), y decide si es CMR comparando el BIN con `CMR_BINS`; ante cualquier duda, no es CMR. Devuelve el monto exacto (total CMR si es CMR; si no, total de oferta) y los datos de la tarjeta. No cobra ni guarda nada.
+3. El cliente ve "Detectamos una tarjeta CMR. Pagarás S/ X" o "Esta tarjeta no es CMR. Pagarás S/ Y" y confirma, con una cuenta regresiva de 4 minutos (decisión de diseño nuestra).
+4. **Cobro:** el navegador llama a `POST /payments/online` con el mismo token, el comprobante y `expectedAmountCents`. El servidor vuelve a calcular; si el monto no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo. Valida el carrito (OPEN, con ítems, sin QR activo y con stock) y el comprobante.
+5. Antes de cobrar crea un `PaymentAttempt` en estado `CREATED` con `tokenId` único. Un token ya usado devuelve el resultado anterior sin cobrar de nuevo.
+6. Cobra con `POST /v1/payments` de Mercado Pago: `transaction_amount` en soles con 2 decimales (céntimos / 100, convertido solo en el borde con una función pura), `token`, `installments` 1, `payment_method_id` e `issuer_id` enviados por el Brick, `payer.email` = correo de la cuenta del cliente (nunca el del navegador), `external_reference` = `attemptId`, y la cabecera `X-Idempotency-Key` = `attemptId`.
+7. Resultado: `approved` sigue al punto 8; `rejected` deja el attempt `FAILED` con `failureCode = status_detail` y responde `402 PAYMENT_DECLINED` sin cambiar stock ni carrito; `in_process` o `pending` deja el attempt `IN_PROCESS` y responde `503 PAYMENT_UNCERTAIN` con "Tu pago está en revisión. No lo repitas: avisa en caja con este código".
+8. Aprobado: el attempt queda `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor, `mpPaymentId` y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
+9. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/payments/{id}/refunds` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
+10. Si el cobro agota el tiempo o hay un error de red: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`. El script de conciliación podrá consultar a Mercado Pago (solo lectura) por `external_reference` para ayudar a resolverlo.
+11. Nunca se guardan el número completo, el CVV ni el vencimiento. El Access Token solo vive en el servidor.
 
 **Salida:** el cliente muestra el QR con el código `O-XXXXX`. El cajero lo verifica (`POST /checkout/exit/:code/verify`) y se guarda `deliveredAt`; una segunda verificación responde `ALREADY_DELIVERED`.
 
@@ -422,7 +423,7 @@ Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intento
 - Contraseñas con bcrypt. JWT con expiración corta. Secretos solo en `.env`.
 - Validar con Zod todos los cuerpos, parámetros y consultas.
 - `helmet`, CORS limitado a `FRONTEND_URL` y `express-rate-limit` en login y checkout.
-- Los datos de tarjeta jamás pasan por el servidor (si se usa Culqi, se tokeniza en el navegador). En un pago en línea, el monto y el "es CMR" los decide el servidor; nunca se aceptan los que envíe el navegador.
+- Los datos de tarjeta jamás pasan por el servidor (con Mercado Pago, el Card Payment Brick los tokeniza en el navegador). En un pago en línea, el monto y el "es CMR" los decide el servidor; nunca se aceptan los que envíe el navegador.
 - Los mensajes de error no revelan detalles internos.
 - Decisión de prototipo: la sesión vive en `localStorage` (`frontend/src/lib/session.ts`) para no montar un servidor de sesión en el MVP; el token lo firma y verifica el backend. En producción convendría mover la sesión a una cookie `httpOnly` (más `Secure` y `SameSite`) para que el JavaScript del navegador no pueda leer el token; queda fuera del alcance actual.
 
@@ -446,7 +447,7 @@ CART_QR_TTL_MINUTES=30
 INSTALLMENTS_OPTIONS=3,6,12
 INSTALLMENTS_MIN_TOTAL_CENTS=30000
 DEV_LOGIN=true
-CULQI_SECRET_KEY=
+MP_ACCESS_TOKEN=
 # Admin inicial que crea `npm run db:seed`
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
@@ -458,9 +459,7 @@ CMR_BINS=411111
 ```
 VITE_API_URL=/api
 VITE_GOOGLE_CLIENT_ID=
-VITE_CULQI_PUBLIC_KEY=
-VITE_CULQI_RSA_ID=
-VITE_CULQI_RSA_PUBLIC_KEY=
+VITE_MP_PUBLIC_KEY=
 ```
 
 Se sube a Git solo `.env.example` (mismos nombres, sin valores). Los `.env` van en `.gitignore`.
@@ -529,7 +528,7 @@ El script valida cada producto con las mismas reglas de la API (código único, 
 - Monolito modular en lugar de microservicios.
 - Sin importación masiva en la interfaz: bastan 20 a 30 productos y una semilla.
 - Comprobante simulado imprimible desde el navegador (imprimir o guardar como PDF).
-- Culqi y la verificación de salida son opcionales y van al final. En línea, el servidor identifica la tarjeta CMR por BIN (`CMR_BINS`) y decide el monto.
+- El pago en línea con Mercado Pago y la verificación de salida son opcionales y van al final. En línea, el servidor identifica la tarjeta CMR por BIN (`CMR_BINS`) y decide el monto.
 - Cada venta guarda los totales original, de oferta, CMR y cobrado, un número de comprobante correlativo y, en pagos en línea, marca, últimos 4 dígitos y banco emisor de la tarjeta.
 - Campos adicionales por categoría definidos por el admin y guardados en JSON dentro del producto.
 - Descuentos regulares solo por campañas que guardan su regla (porcentaje o monto fijo), con alcance por productos, categorías o toda la tienda, fechas, interruptor y prioridad; gana una sola, sin acumular.

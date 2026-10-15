@@ -4,7 +4,7 @@ Versión 1.0 · Prototipo académico con datos simulados · Interfaz en español
 
 ## 1. Resumen
 
-QRCheckout es una web responsive que se usa desde el celular. El cliente escanea los códigos de barras de los productos de la tienda, ve al instante el **precio de oferta** y el **precio con tarjeta CMR**, arma su carrito y lo lleva a caja como un **QR**. El cajero escanea ese QR desde su propia pantalla de la misma web, cobra y confirma la venta. Opcionalmente, el cliente puede pagar en línea con Culqi.
+QRCheckout es una web responsive que se usa desde el celular. El cliente escanea los códigos de barras de los productos de la tienda, ve al instante el **precio de oferta** y el **precio con tarjeta CMR**, arma su carrito y lo lleva a caja como un **QR**. El cajero escanea ese QR desde su propia pantalla de la misma web, cobra y confirma la venta. Opcionalmente, el cliente puede pagar en línea con Mercado Pago.
 
 Tienda de referencia: Saga Falabella Puruchuco. Los precios y la lógica CMR se basan en cómo los muestra falabella.com.pe.
 
@@ -51,7 +51,7 @@ No existe registro público para cajero ni admin.
 - Carga inicial de 20 a 30 productos de ejemplo con un script (semilla).
 
 ### Opcional, solo si alcanza el tiempo
-- Pago en línea con Culqi en modo pruebas, con detección automática de tarjeta CMR (RN-20).
+- Pago en línea con Mercado Pago en modo pruebas, con detección automática de tarjeta CMR (RN-20).
 - Código de salida (`O-XXXXX`) para verificar la entrega de las compras pagadas en línea (RN-21).
 
 ### Fuera del MVP
@@ -104,7 +104,7 @@ Un producto puede tener los tres precios, solo original y oferta, solo original 
 - **RN-17 Cambios de precio en curso.** Si una campaña empieza o termina mientras hay carritos abiertos, el carrito muestra los precios vigentes al consultarse y el cobro usa los vigentes en ese momento (RN-07).
 - **RN-18 Porcentajes mostrados.** Los porcentajes que ve el cliente (por ejemplo `-42%`) se calculan a partir de los precios (`1 − precio final / original`) y se muestran redondeados a entero. No se guardan.
 - **RN-19 Cantidad al escanear.** Al escanear un producto se agrega 1 unidad. El cliente puede cambiar la cantidad con un contador (− y +) o escribiendo el número, sin escanear el producto varias veces. Escanear otra vez el mismo producto suma 1. La cantidad siempre respeta el límite de RN-04.
-- **RN-20 Pago en línea y CMR.** La tarjeta se identifica después de tokenizarla con Culqi: el servidor consulta el token, compara su BIN (los primeros 6 dígitos) con la lista configurable `CMR_BINS` y decide el monto; nunca usa los datos que diga el navegador. Si coincide, se cobra el total CMR; si no, el total de oferta. El cliente ve el monto real (y si se detectó CMR) y lo confirma antes de pagar. El monto lo decide siempre el servidor. Nunca se guardan el número completo, el CVV ni el vencimiento; solo marca, últimos 4 dígitos y banco emisor.
+- **RN-20 Pago en línea y CMR.** La tarjeta se identifica después de tokenizarla con Mercado Pago: el servidor obtiene el BIN (los primeros 6 dígitos) del token, lo compara con la lista configurable `CMR_BINS` y decide el monto; nunca usa los datos que diga el navegador. Si coincide, se cobra el total CMR; si no, el total de oferta. El cliente ve el monto real (y si se detectó CMR) y lo confirma antes de pagar. El monto lo decide siempre el servidor. Nunca se guardan el número completo, el CVV ni el vencimiento; solo marca, últimos 4 dígitos y banco emisor.
 - **RN-21 Salida de compras en línea.** Una compra pagada en línea genera un código de salida (`O-XXXXX`). El cajero lo verifica al salir y la venta pasa a entregada; una segunda verificación responde "Ya entregado".
 - **RN-22 Vaciar carrito.** El cliente puede vaciar el carrito completo, con una confirmación en pantalla. No es posible mientras el QR esté activo.
 - **RN-23 Números y códigos de venta.** Cada venta recibe un número de comprobante correlativo por serie: `T001-000001` para tickets, `B001-000001` para boletas y `F001-000001` para facturas. Además tiene un código corto: el del carrito si se cobró en caja, o `O-XXXXX` si se pagó en línea.
@@ -167,7 +167,7 @@ Un producto puede tener los tres precios, solo original y oferta, solo original 
 | Stock en tiempo real con ventas en caja | Solo baja con ventas confirmadas dentro de QRCheckout |
 | Integración con la caja de Saga | Sustituida por la pantalla del cajero |
 | Garantía extendida, guías de entrada y salida | Fuera del MVP |
-| Pago con Culqi | Opcional, al final. Culqi acepta Visa y Mastercard, así que una CMR se puede cobrar; que sea CMR se detecta por BIN (RN-20) |
+| Pago con Mercado Pago | Opcional, al final. Mercado Pago acepta Visa y Mastercard, así que una CMR se puede cobrar; que sea CMR se detecta por BIN (RN-20) |
 | Fechas de sprint y 12 semanas | Ficticias; el plan usa 3 sprints sin fechas |
 | Descuento CMR | Porcentaje por producto, calculado sobre el precio de oferta (ya con campaña) y opcional por producto |
 | Descuentos regulares | Solo campañas (productos, categorías o toda la tienda), con porcentaje o monto fijo, fechas y prioridad |
