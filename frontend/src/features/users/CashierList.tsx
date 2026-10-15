@@ -1,8 +1,6 @@
+import { StatusSwitch } from '../../components/StatusSwitch';
 import { formatDateLima } from '../../lib/date';
 import type { Cashier } from '../../types/user';
-
-const buttonClasses =
-  'min-h-[44px] rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50';
 
 type CashierListProps = {
   cashiers: Cashier[];
@@ -41,21 +39,12 @@ export function CashierList({ cashiers, busyId, onAsk }: CashierListProps) {
                 <td className="p-2">{cashier.name}</td>
                 <td className="p-2">{cashier.email}</td>
                 <td className="p-2">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={cashier.active}
-                    aria-label={`Cajero ${cashier.name}: ${cashier.active ? 'activo' : 'inactivo'}`}
-                    onClick={() => onAsk(cashier)}
-                    disabled={busy}
-                    className={`${buttonClasses} flex items-center gap-2`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`h-4 w-8 rounded-full ${cashier.active ? 'bg-saving' : 'bg-line'}`}
-                    />
-                    <span>{cashier.active ? 'Activo' : 'Inactivo'}</span>
-                  </button>
+                  <StatusSwitch
+                    checked={cashier.active}
+                    label={`Cajero ${cashier.name}: ${cashier.active ? 'activo' : 'inactivo'}`}
+                    busy={busy}
+                    onAsk={() => onAsk(cashier)}
+                  />
                 </td>
                 <td className="p-2">{formatDateLima(cashier.createdAt)}</td>
               </tr>

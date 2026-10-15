@@ -1,4 +1,4 @@
-export const DASHBOARD_DEFAULT_DAYS = 30;
+export const DASHBOARD_DEFAULT_DAYS = 7;
 export const DASHBOARD_MAX_DAYS = 366;
 
 export type DashboardRange = {

@@ -11,7 +11,7 @@ import {
 import { toastSuccess } from '../../lib/toast';
 import { ApiError } from '../../services/api';
 import { adjustStock, listStockAdjustments } from '../../services/products';
-import type { AdminProduct, StockAdjustment } from '../../types/product';
+import type { StockAdjustment } from '../../types/product';
 
 const HISTORY_PAGE_SIZE = 10;
 
@@ -23,8 +23,16 @@ const buttonClasses =
 
 const secondaryButton = `${buttonClasses} flex min-h-[44px] items-center border border-line bg-surface text-ink`;
 
+/** Datos mínimos del producto que necesita el ajuste: el panel pasa menos campos que el listado. */
+export type StockAdjustmentProduct = {
+  id: number;
+  name: string;
+  stock: number;
+  active?: boolean;
+};
+
 type StockAdjustmentModalProps = {
-  product: AdminProduct;
+  product: StockAdjustmentProduct;
   /** El stock nuevo que devolvió el servidor, para actualizar la lista o el formulario. */
   onChanged: (stock: number) => void;
   onClose: () => void;
@@ -182,7 +190,7 @@ export function StockAdjustmentModal({ product, onChanged, onClose }: StockAdjus
     <Modal open title="Ajustar stock" onClose={onClose} busy={submitting} size="lg">
       <p className="mt-1 text-base text-muted">
         {product.name}
-        {!product.active && ' · Este producto está inactivo y su stock también se puede corregir'}
+        {product.active === false && ' · Este producto está inactivo y su stock también se puede corregir'}
       </p>
 
       <form onSubmit={(event) => void handleSubmit(event)} noValidate className="mt-4 max-w-md">

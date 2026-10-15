@@ -1,3 +1,4 @@
+import { StatusSwitch } from '../../components/StatusSwitch';
 import type { Category } from '../../types/category';
 
 const buttonClasses =
@@ -40,21 +41,12 @@ export function CategoryList({ categories, busyId, onEdit, onAsk }: CategoryList
               <tr key={category.id} className="border-t border-line">
                 <td className="p-2">{category.name}</td>
                 <td className="p-2">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={category.active}
-                    aria-label={`Categoría ${category.name}: ${category.active ? 'activa' : 'inactiva'}`}
-                    onClick={() => onAsk(category)}
-                    disabled={busy}
-                    className={`${buttonClasses} flex items-center gap-2`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`h-4 w-8 rounded-full ${category.active ? 'bg-saving' : 'bg-line'}`}
-                    />
-                    <span>{category.active ? 'Activa' : 'Inactiva'}</span>
-                  </button>
+                  <StatusSwitch
+                    checked={category.active}
+                    label={`Categoría ${category.name}: ${category.active ? 'activa' : 'inactiva'}`}
+                    busy={busy}
+                    onAsk={() => onAsk(category)}
+                  />
                 </td>
                 <td className="p-2 text-center">{category.fields.length}</td>
                 <td className="p-2">

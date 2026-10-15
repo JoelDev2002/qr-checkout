@@ -22,8 +22,8 @@ describe('lastDaysRange', () => {
 describe('defaultDashboardRange', () => {
   it('cuenta el día de hoy en Lima y empieza hace DASHBOARD_DEFAULT_DAYS menos uno', () => {
     const now = new Date('2026-10-10T12:00:00Z');
-    expect(defaultDashboardRange(now)).toEqual({ from: '2026-09-11', to: '2026-10-10' });
-    expect(DASHBOARD_DEFAULT_DAYS).toBe(30);
+    expect(defaultDashboardRange(now)).toEqual({ from: '2026-10-04', to: '2026-10-10' });
+    expect(DASHBOARD_DEFAULT_DAYS).toBe(7);
   });
 
   it('agrega un día cuando Lima ya está en la fecha siguiente', () => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StockAdjustmentModal } from '../../features/products/StockAdjustment';
 import {
   DASHBOARD_MAX_DAYS,
   barHeight,
@@ -14,6 +15,7 @@ import { ApiError } from '../../services/api';
 import {
   getDashboardSummary,
   type DashboardSummary,
+  type LowStockProduct,
 } from '../../services/dashboard';
 
 const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
@@ -41,6 +43,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [thresholdError, setThresholdError] = useState<string | null>(null);
+  const [adjusting, setAdjusting] = useState<LowStockProduct | null>(null);
   const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
@@ -119,6 +122,7 @@ export function Dashboard() {
   }
 
   const maxDayTotal = data === null ? 0 : Math.max(0, ...data.salesByDay.map((day) => day.totalCents));
+  const activePresetDays = RANGE_DAYS_OPTIONS.find((days) => daysInRange(range.from, range.to) === days) ?? null;
 
   return (
     <div>
@@ -137,7 +141,13 @@ export function Dashboard() {
         <section aria-label="Rango de fechas" className="mt-6">
           <div className="flex flex-wrap items-end gap-2">
             {RANGE_DAYS_OPTIONS.map((days) => (
-              <button key={days} type="button" onClick={() => applyPreset(days)} className={secondaryButton}>
+              <button
+                key={days}
+                type="button"
+                onClick={() => applyPreset(days)}
+                aria-pressed={activePresetDays === days}
+                className={activePresetDays === days ? primaryButton : secondaryButton}
+              >
                 Últimos {days} días
               </button>
             ))}
@@ -387,7 +397,16 @@ export function Dashboard() {
                     <tbody>
                       {data.lowStock.map((product) => (
                         <tr key={product.id} className="border-t border-line">
-                          <td className="px-3 py-2 text-ink">{product.name}</td>
+                          <td className="px-3 py-2">
+                            <button
+                              type="button"
+                              onClick={() => setAdjusting(product)}
+                              aria-label={`Ajustar stock de ${product.name}`}
+                              className="min-h-[44px] text-left font-semibold text-ink underline decoration-line underline-offset-2 hover:decoration-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                            >
+                              {product.name}
+                            </button>
+                          </td>
                           <td className="px-3 py-2 tabular-nums text-ink">{product.barcode}</td>
                           <td className="px-3 py-2 text-right tabular-nums text-ink">{product.stock}</td>
                         </tr>
@@ -398,6 +417,14 @@ export function Dashboard() {
               )}
             </section>
           </>
+        )}
+
+        {adjusting !== null && (
+          <StockAdjustmentModal
+            product={adjusting}
+            onChanged={() => setRetryKey((key) => key + 1)}
+            onClose={() => setAdjusting(null)}
+          />
         )}
     </div>
   );

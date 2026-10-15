@@ -1,3 +1,4 @@
+import { StatusSwitch } from '../../components/StatusSwitch';
 import { formatMoney } from '../../lib/money';
 import { formatBps } from '../../lib/campaignValues';
 import type { Campaign } from '../../types/campaign';
@@ -80,21 +81,12 @@ function CampaignListRow({
       </td>
       <td className="p-2">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={campaign.active}
-            aria-label={`Campaña ${campaign.name}: ${campaign.active ? 'activa' : 'inactiva'}`}
-            onClick={() => onAsk(campaign)}
-            disabled={busy}
-            className={`${buttonClasses} flex items-center gap-2`}
-          >
-            <span
-              aria-hidden="true"
-              className={`h-4 w-8 rounded-full ${campaign.active ? 'bg-saving' : 'bg-line'}`}
-            />
-            <span>{campaign.active ? 'Activa' : 'Inactiva'}</span>
-          </button>
+          <StatusSwitch
+            checked={campaign.active}
+            label={`Campaña ${campaign.name}: ${campaign.active ? 'activa' : 'inactiva'}`}
+            busy={busy}
+            onAsk={() => onAsk(campaign)}
+          />
           <button
             type="button"
             onClick={() => onEdit(campaign)}

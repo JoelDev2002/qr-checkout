@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
+import { StatusSwitch } from '../../components/StatusSwitch';
 import { formatBarcode, formatProductPrices, isLowStock } from '../../lib/productDisplay';
 import type { AdminProduct } from '../../types/product';
-import { ActiveToggle } from './ActiveToggle';
 
 const editLinkClasses =
   'flex min-h-[44px] min-w-[44px] items-center rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
@@ -53,7 +53,12 @@ function ProductTableRow({ product, busy, onAskToggle, onAskAdjust }: ProductRow
         )}
       </td>
       <td className="p-2">
-        <ActiveToggle product={product} busy={busy} onAsk={() => onAskToggle(product)} />
+        <StatusSwitch
+          checked={product.active}
+          label={`Producto ${product.name}: ${product.active ? 'activo' : 'inactivo'}`}
+          busy={busy}
+          onAsk={() => onAskToggle(product)}
+        />
       </td>
       <td className="p-2">
         <div className="flex flex-wrap gap-2">
@@ -120,7 +125,12 @@ function ProductCard({ product, busy, onAskToggle, onAskAdjust }: ProductRowProp
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <ActiveToggle product={product} busy={busy} onAsk={() => onAskToggle(product)} />
+        <StatusSwitch
+          checked={product.active}
+          label={`Producto ${product.name}: ${product.active ? 'activo' : 'inactivo'}`}
+          busy={busy}
+          onAsk={() => onAskToggle(product)}
+        />
         <Link
           to={`/admin/products/${product.id}`}
           aria-label={`Editar ${product.name}`}
