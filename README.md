@@ -69,7 +69,7 @@ Nunca se sube ningún `.env` a Git (solo `.env.example`). No pongas valores real
 | `INSTALLMENTS_OPTIONS` | Cuotas informativas ofrecidas, por ejemplo `3,6,12`. |
 | `INSTALLMENTS_MIN_TOTAL_CENTS` | Total mínimo en céntimos para mostrar cuotas (por ejemplo `30000` = S/ 300.00). |
 | `DEV_LOGIN` | `true` solo en desarrollo: habilita `POST /auth/dev-login` (cliente de prueba). En cualquier otro caso la ruta no existe. |
-| `CULQI_SECRET_KEY` | Solo para el pago en línea opcional. Déjalo vacío si no lo usas. |
+| `MP_ACCESS_TOKEN` | Solo para el pago en línea opcional con Mercado Pago. Déjalo vacío si no lo usas. |
 | `ADMIN_EMAIL` | Correo del admin inicial que crea `npm run db:seed`. |
 | `ADMIN_PASSWORD` | Contraseña del admin inicial (mínimo 8 caracteres). |
 | `CMR_BINS` | BIN de prueba que el demo trata como CMR (por ejemplo `411111`). En producción la lista la entrega el banco. |
@@ -82,7 +82,7 @@ Si la contraseña de MySQL tiene caracteres especiales (`@`, `:`, `/`, `#`…), 
 |---|---|
 | `VITE_API_URL` | Debe ser `/api`. Ver [Probar desde el celular](#probar-desde-el-celular-con-un-túnel). |
 | `VITE_GOOGLE_CLIENT_ID` | El mismo ID de cliente OAuth que `GOOGLE_CLIENT_ID`. Si queda vacío, el botón de Google muestra un aviso. |
-| `VITE_CULQI_PUBLIC_KEY` | Solo para el pago en línea opcional. Déjalo vacío si no lo usas. |
+| `VITE_MP_PUBLIC_KEY` | Solo para el pago en línea opcional con Mercado Pago. Déjalo vacío si no lo usas. |
 
 ### 4. Generar el `JWT_SECRET` con Node
 

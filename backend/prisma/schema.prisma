@@ -214,7 +214,7 @@ model Sale {
   cardBrand          String? // solo pagos en línea
   cardLast4          String?
   cardIssuer         String?
-  culqiChargeId      String?
+  mpPaymentId        String?
   deliveredAt        DateTime?
   createdAt          DateTime      @default(now())
   items              SaleItem[]
