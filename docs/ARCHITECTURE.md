@@ -34,9 +34,11 @@ Versión 1.0 · Todo se ejecuta en local (Windows) · Lenguaje: **TypeScript** e
 | helmet, cors, express-rate-limit | Seguridad básica |
 | nanoid | Código corto del carrito |
 | csv-parse | Leer el CSV de la semilla de productos |
-| Culqi (solo si se hace la parte opcional) | Cobro con tarjeta en modo pruebas |
+| Culqi (API REST con `fetch`, sin SDK; solo si se hace la parte opcional) | Cobro con tarjeta en modo pruebas; el Custom Checkout se carga desde `js.culqi.com` solo en la pantalla de pago |
 
 **Pruebas:** Vitest (lógica y componentes) y Supertest (API).
+
+Culqi se integra sin SDK: el backend llama a su API REST con `fetch` usando la llave secreta (solo en el servidor), y el Custom Checkout se carga desde `js.culqi.com` únicamente cuando el cliente abre la pantalla de pago.
 
 No añadir dependencias fuera de esta lista sin consultarlo.
 
@@ -117,6 +119,7 @@ enum DocType       { TICKET BOLETA FACTURA }
 enum FieldType     { TEXT NUMBER SELECT BOOLEAN }
 enum DiscountType   { PERCENT FIXED }
 enum CampaignScope  { PRODUCTS CATEGORIES STORE }
+enum PaymentAttemptStatus { CREATED FAILED CHARGED SALE_CREATED REFUNDED REFUND_FAILED UNKNOWN }
 
 model User {
   id           Int               @id @default(autoincrement())
@@ -132,6 +135,7 @@ model User {
   customerSales Sale[]           @relation("CustomerSales")
   adjustments  StockAdjustment[]
   scans        ProductScan[]
+  paymentAttempts PaymentAttempt[]
 }
 
 model Category {
@@ -236,6 +240,7 @@ model Cart {
   updatedAt   DateTime   @updatedAt
   items       CartItem[]
   sale        Sale?
+  paymentAttempts PaymentAttempt[]
 }
 
 model CartItem {
@@ -295,6 +300,22 @@ model SaleItem {
   campaignName       String?
 }
 
+model PaymentAttempt {
+  id            Int                  @id @default(autoincrement())
+  tokenId       String               @unique // token de Culqi, de un solo uso
+  cartId        Int
+  cart          Cart                 @relation(fields: [cartId], references: [id])
+  customerId    Int
+  customer      User                 @relation(fields: [customerId], references: [id])
+  amountCents   Int
+  isCmr         Boolean
+  status        PaymentAttemptStatus @default(CREATED)
+  culqiChargeId String?
+  failureCode   String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+}
+
 model DocumentSeries {
   series     String @id // T001, B001, F001
   lastNumber Int    @default(0)
@@ -352,7 +373,7 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | POST `/payments/online` | cliente | Opcional: cobra con Culqi el monto decidido por el servidor y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |
 
-Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
+Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_TOKEN_INVALID`, `PAYMENT_NOT_CONFIGURED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
 
 ## 7. Flujo crítico: QR y cobro
 
@@ -377,12 +398,18 @@ Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE
 Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intentos por usuario, para que nadie pueda adivinar códigos.
 
 **Pago en línea** (opcional: `POST /payments/online/preview` y `POST /payments/online`)
-1. El navegador tokeniza la tarjeta con Culqi y envía solo el token, el tipo de comprobante y el correo.
-2. **Vista previa:** el servidor consulta a Culqi los datos del token (banco emisor y marca); no usa lo que diga el navegador. Compara el BIN con `CMR_BINS`. Si coincide, el monto es el total CMR; si no, el total de oferta. Devuelve el monto y si se detectó CMR, y la pantalla se lo muestra al cliente. Revisar en la documentación de Culqi cómo consultar un token.
-3. **Cobro:** el cliente confirma. El servidor vuelve a calcular precios y stock, valida el comprobante y le pide a Culqi cobrar el monto que él decidió.
-4. Si Culqi rechaza el cobro, se responde `PAYMENT_DECLINED` con el motivo y no cambia nada: el cliente puede reintentar con otra tarjeta.
-5. Si Culqi aprueba, dentro de **una transacción** se baja el stock, se crea la `Sale` y su detalle con `paymentMethod = ONLINE`, `cardBrand`, `cardLast4`, `cardIssuer`, `culqiChargeId` y el código `O-XXXXX`, y el carrito pasa de OPEN a PAID con actualización condicionada. Si la transacción falla después de haber cobrado, se anula el cobro en Culqi y se registra el error.
-6. **Salida:** el cliente muestra el QR con el código `O-XXXXX`. El cajero lo verifica (`POST /checkout/exit/:code/verify`) y se guarda `deliveredAt`; una segunda verificación responde `ALREADY_DELIVERED`.
+1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y pulsa **Pagar con tarjeta**. El navegador abre el Custom Checkout de Culqi, donde se escribe la tarjeta; esos datos nunca pasan por nuestro servidor. Culqi devuelve un token que vive 5 minutos y sirve una sola vez.
+2. **Vista previa:** el navegador envía solo el token y los datos del comprobante a `POST /payments/online/preview`. El servidor consulta el token contra Culqi con la llave secreta (no usa lo que diga el navegador), lee el BIN, la marca, el emisor y los últimos 4 dígitos, y decide si es CMR comparando el BIN con `CMR_BINS`; ante cualquier duda, no es CMR. Devuelve el monto exacto (total CMR si es CMR; si no, total de oferta) y los datos de la tarjeta. No cobra ni guarda nada.
+3. El cliente ve "Detectamos una tarjeta CMR. Pagarás S/ X" o "Esta tarjeta no es CMR. Pagarás S/ Y" y confirma.
+4. **Cobro:** el navegador llama a `POST /payments/online` con el mismo token, el comprobante y `expectedAmountCents`. El servidor vuelve a consultar el token y a recalcular; si el monto no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo. Valida que el carrito esté OPEN, con ítems, sin QR activo y con stock, y valida el comprobante.
+5. Antes de cobrar crea un `PaymentAttempt` en estado `CREATED` con `tokenId` único. Si el token ya fue usado, devuelve el resultado anterior sin cobrar de nuevo.
+6. Cobra a Culqi con `POST /v2/charges`, con el monto en céntimos enteros, `currency_code` PEN, el correo del token, `source_id` y metadata con `attemptId` y `cartId`. Si Culqi rechaza, el attempt queda `FAILED` y se responde `402 PAYMENT_DECLINED`, sin cambiar el stock ni el carrito.
+7. Aprobado: el attempt pasa a `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor y `culqiChargeId`, y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
+8. Si la transacción falla después de haber cobrado: se reembolsa en Culqi y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
+9. Si el cobro agota el tiempo de espera o hay un error de red: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`.
+10. Nunca se guardan el número completo, el CVV ni el vencimiento. La llave secreta de Culqi solo vive en el servidor.
+
+**Salida:** el cliente muestra el QR con el código `O-XXXXX`. El cajero lo verifica (`POST /checkout/exit/:code/verify`) y se guarda `deliveredAt`; una segunda verificación responde `ALREADY_DELIVERED`.
 
 **Numeración:** al crear cada venta, dentro de la misma transacción, se incrementa de forma atómica el contador de su serie en `DocumentSeries` (T001 ticket, B001 boleta, F001 factura) y se arma `receiptNumber`, por ejemplo `B001-000124`.
 
@@ -432,6 +459,8 @@ CMR_BINS=411111
 VITE_API_URL=/api
 VITE_GOOGLE_CLIENT_ID=
 VITE_CULQI_PUBLIC_KEY=
+VITE_CULQI_RSA_ID=
+VITE_CULQI_RSA_PUBLIC_KEY=
 ```
 
 Se sube a Git solo `.env.example` (mismos nombres, sin valores). Los `.env` van en `.gitignore`.
