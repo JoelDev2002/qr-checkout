@@ -47,3 +47,11 @@ export function resolveCharge(
     items: chargedItems,
   };
 }
+
+/**
+ * RN-20: el pago en línea cobra SIEMPRE el total de oferta, nunca el precio CMR (el servidor no puede
+ * comprobar que la tarjeta sea CMR). El monto lo decide el servidor con los precios ya resueltos.
+ */
+export function resolveOnlineCharge(items: readonly CartItemPrices[]): Charge {
+  return resolveCharge('OTHER_CARD', items);
+}

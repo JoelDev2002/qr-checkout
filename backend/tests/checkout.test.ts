@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { priceAppliedFor, resolveCharge } from '../src/domain/checkout.js';
+import { priceAppliedFor, resolveCharge, resolveOnlineCharge } from '../src/domain/checkout.js';
 import { docSeriesOf, formatReceiptNumber, resolveBuyer } from '../src/domain/document.js';
 import type { CartItemPrices } from '../src/domain/pricing.js';
 
@@ -53,6 +53,27 @@ describe('precio aplicado y monto cobrado (RN-03)', () => {
 
       expect(charge.items.reduce((total, item) => total + item.subtotalCents, 0), medio).toBe(charge.totalCents);
     }
+  });
+});
+
+describe('cobro en línea (RN-20)', () => {
+  it('cobra siempre el total de oferta, nunca el CMR', () => {
+    const charge = resolveOnlineCharge([AUDIFONOS, CAMA]);
+
+    expect(charge.priceApplied).toBe('NORMAL');
+    expect(charge.summary.normalTotalCents).toBe(503790);
+    expect(charge.totalCents).toBe(charge.summary.normalTotalCents);
+    expect(charge.totalCents).not.toBe(charge.summary.cmrTotalCents);
+  });
+
+  it('deja cada ítem con su precio de oferta como precio cobrado', () => {
+    const charge = resolveOnlineCharge([AUDIFONOS, CAMA]);
+
+    expect(charge.items).toEqual([
+      { ...AUDIFONOS, paidPriceCents: 3990, subtotalCents: 3990 },
+      { ...CAMA, paidPriceCents: 249900, subtotalCents: 499800 },
+    ]);
+    expect(charge.items.reduce((total, item) => total + item.subtotalCents, 0)).toBe(charge.totalCents);
   });
 });
 

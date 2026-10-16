@@ -108,7 +108,7 @@ Un producto puede tener los tres precios, solo original y oferta, solo original 
 - **RN-21 Salida de compras en línea.** Una compra pagada en línea genera un código de salida (`O-XXXXX`). El cajero lo verifica al salir y la venta pasa a entregada; una segunda verificación responde "Ya entregado".
 - **RN-22 Vaciar carrito.** El cliente puede vaciar el carrito completo, con una confirmación en pantalla. No es posible mientras el QR esté activo.
 - **RN-23 Números y códigos de venta.** Cada venta recibe un número de comprobante correlativo por serie: `T001-000001` para tickets, `B001-000001` para boletas y `F001-000001` para facturas. Además tiene un código corto: el del carrito si se cobró en caja, o `O-XXXXX` si se pagó en línea.
-- **RN-28 Un pago en línea no se repite.** Cada token se usa una sola vez y, si no se puede confirmar el resultado del cobro, el cliente no reintenta sino que avisa en caja.
+- **RN-28 Un pago en línea no se repite.** Un token ya usado, cualquiera que haya sido el resultado anterior, responde `409 PAYMENT_TOKEN_INVALID` sin cobrar. El cliente revisa su historial de compras antes de reintentar.
 
 ## 7. Historias de usuario
 

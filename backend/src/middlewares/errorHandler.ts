@@ -5,6 +5,8 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Campos extra que acompañan al error (por ejemplo el monto nuevo en AMOUNT_CHANGED). */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -48,7 +50,9 @@ function bodyParserResponse(
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof ApiError) {
-    res.status(error.status).json({ error: { code: error.code, message: error.message } });
+    res
+      .status(error.status)
+      .json({ error: { code: error.code, message: error.message, ...error.details } });
     return;
   }
 

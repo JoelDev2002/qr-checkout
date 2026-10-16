@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { CART_CODE_ALPHABET, generateCartCode, isValidCartCode } from '../src/domain/cartCode.js';
+import {
+  CART_CODE_ALPHABET,
+  generateCartCode,
+  generateExitCode,
+  isValidCartCode,
+  isValidExitCode,
+} from '../src/domain/cartCode.js';
 
 describe('generateCartCode', () => {
   it('genera códigos con el formato C-XXXXX y solo caracteres no ambiguos', () => {
@@ -50,5 +56,29 @@ describe('isValidCartCode', () => {
 
   it('no acepta un código de barras', () => {
     expect(isValidCartCode('4006381333931')).toBe(false);
+  });
+});
+
+describe('código de salida de una compra en línea (RN-23)', () => {
+  it('genera códigos con el formato O-XXXXX y el mismo alfabeto sin ambigüedades', () => {
+    for (let attempt = 0; attempt < 200; attempt += 1) {
+      const code = generateExitCode();
+
+      expect(code).toMatch(/^O-[A-Z2-9]{5}$/);
+      expect(code.slice(2)).not.toMatch(/[0O1IL]/);
+      expect(isValidExitCode(code)).toBe(true);
+    }
+  });
+
+  it('acepta un código de salida con el formato esperado', () => {
+    expect(isValidExitCode('O-8F3K2')).toBe(true);
+    expect(isValidExitCode('O-23456')).toBe(true);
+  });
+
+  it('no confunde un código de salida con uno de carrito', () => {
+    expect(isValidExitCode('C-8F3K2')).toBe(false);
+    expect(isValidCartCode('O-8F3K2')).toBe(false);
+    expect(isValidExitCode('O-8F3K')).toBe(false);
+    expect(isValidExitCode('o-8f3k2')).toBe(false);
   });
 });

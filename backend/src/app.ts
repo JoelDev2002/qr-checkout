@@ -10,6 +10,7 @@ import { createCartsRouter } from './modules/carts/routes.js';
 import { createCategoriesRouter } from './modules/categories/routes.js';
 import { createCheckoutRouter } from './modules/checkout/routes.js';
 import { createDashboardRouter } from './modules/dashboard/routes.js';
+import { createPaymentsRouter, type PaymentsRouterOptions } from './modules/payments/routes.js';
 import { createProductsRouter } from './modules/products/routes.js';
 import { createPurchasesRouter } from './modules/purchases/routes.js';
 import { createUsersRouter } from './modules/users/routes.js';
@@ -23,6 +24,10 @@ export type CreateAppOptions = {
   googleClientId?: string;
   /** Verificador de Google inyectado: las pruebas usan uno falso sin red. */
   googleVerifier?: GoogleIdTokenVerifier;
+  /** Cliente de Mercado Pago inyectado: las pruebas usan uno falso sin red. */
+  mercadoPagoClient?: PaymentsRouterOptions['mercadoPagoClient'];
+  /** '' (vacío) fuerza el caso "no configurado": la ruta de pago responde 503. */
+  mpAccessToken?: string;
 };
 
 export function createApp(options: CreateAppOptions = {}) {
@@ -64,6 +69,13 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use('/api/purchases', createPurchasesRouter());
   app.use('/api/checkout', createCheckoutRouter());
   app.use('/api/dashboard', createDashboardRouter());
+  app.use(
+    '/api/payments',
+    createPaymentsRouter({
+      mercadoPagoClient: options.mercadoPagoClient,
+      mpAccessToken: options.mpAccessToken,
+    }),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler);

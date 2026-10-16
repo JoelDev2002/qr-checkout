@@ -48,10 +48,10 @@ export type CartView = {
   installments: InstallmentOption[];
 };
 
-const CART_LOCKED_MESSAGE = 'Tu carrito tiene un QR activo. Cancela el QR para editarlo.';
+export const CART_LOCKED_MESSAGE = 'Tu carrito tiene un QR activo. Cancela el QR para editarlo.';
 const PRODUCT_NOT_FOUND_MESSAGE = 'No encontramos este producto.';
 const ITEM_NOT_FOUND_MESSAGE = 'Ese producto no está en tu carrito.';
-const EMPTY_CART_MESSAGE = 'El carrito está vacío.';
+export const EMPTY_CART_MESSAGE = 'El carrito está vacío.';
 
 type CartSnapshot = {
   cart: CartRecord;

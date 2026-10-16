@@ -205,7 +205,7 @@ const saleItemSelect = {
   campaignName: true,
 } satisfies Prisma.SaleItemSelect;
 
-const saleSelect = {
+export const saleSelect = {
   id: true,
   code: true,
   receiptNumber: true,
@@ -227,7 +227,7 @@ const saleSelect = {
 
 type SaleRow = Prisma.SaleGetPayload<{ select: typeof saleSelect }>;
 
-function toSaleRecord(row: SaleRow): SaleRecord {
+export function toSaleRecord(row: SaleRow): SaleRecord {
   return {
     id: row.id,
     code: row.code,
@@ -254,7 +254,7 @@ function toSaleRecord(row: SaleRow): SaleRecord {
  * dos cobros simult├íneos de la misma serie nunca reciben el mismo n├║mero. La fila de la serie nace con
  * el primer cobro de esa serie.
  */
-async function nextSeriesNumber(tx: Prisma.TransactionClient, series: string): Promise<number> {
+export async function nextSeriesNumber(tx: Prisma.TransactionClient, series: string): Promise<number> {
   await tx.$executeRaw(
     Prisma.sql`INSERT INTO \`DocumentSeries\` (\`series\`, \`lastNumber\`) VALUES (${series}, 1)
       ON DUPLICATE KEY UPDATE \`lastNumber\` = \`lastNumber\` + 1`,

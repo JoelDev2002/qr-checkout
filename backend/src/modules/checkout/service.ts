@@ -104,7 +104,8 @@ async function requireChargeableCart(code: string, now: Date): Promise<Chargeabl
   return { ...cart, qrExpiresAt: cart.qrExpiresAt };
 }
 
-function toItemView(item: CheckoutItemRecord, campaigns: readonly Campaign[], now: Date): CheckoutItemView {
+/** Las vistas de los ítems que se cobran: precios resueltos, problema de disponibilidad y copia de venta. */
+export function toItemView(item: CheckoutItemRecord, campaigns: readonly Campaign[], now: Date): CheckoutItemView {
   const product = item.product;
   const prices = resolvePrices(product, campaigns, now);
   return {
@@ -152,7 +153,7 @@ export async function rejectCheckout(code: string, now: Date): Promise<CheckoutR
   return { code: cart.qrCode ?? code, customerName: cart.customer.name };
 }
 
-function toSaleView(sale: SaleRecord): SaleView {
+export function toSaleView(sale: SaleRecord): SaleView {
   return {
     id: sale.id,
     code: sale.code,
@@ -192,7 +193,7 @@ function requireBuyer(input: ConfirmCheckoutInput): Buyer {
   return resolution.buyer;
 }
 
-function requirePurchasable(items: readonly CheckoutItemView[]): void {
+export function requirePurchasable(items: readonly CheckoutItemView[]): void {
   for (const item of items) {
     if (item.issue === 'INACTIVE') {
       throw new ApiError(409, 'OUT_OF_STOCK', `${item.name} ya no está a la venta.`);
@@ -258,7 +259,7 @@ export async function confirmCheckout(
   }
 }
 
-function toSaleItems(
+export function toSaleItems(
   views: readonly CheckoutItemView[],
   charged: readonly ChargedItem[],
 ): CreatePaidSaleItem[] {

@@ -371,7 +371,7 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | POST `/payments/online` | cliente | Cobra con Mercado Pago siempre el total de oferta y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |
 
-Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_NOT_CONFIGURED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
+Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_NOT_CONFIGURED`, `PAYMENT_TOKEN_INVALID`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
 
 ## 7. Flujo crítico: QR y cobro
 
@@ -396,9 +396,9 @@ Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE
 Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intentos por usuario, para que nadie pueda adivinar códigos.
 
 **Pago en línea** (`POST /payments/online`)
-1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y paga en el formulario de tarjeta de Mercado Pago (Card Payment Brick): la tarjeta se escribe en el navegador y nunca toca nuestro servidor. Al enviarlo, el navegador llama a `POST /payments/online` con **solo** el token de un solo uso, el medio de pago, el correo, el comprobante y `expectedAmountCents`.
+1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y paga en el formulario de tarjeta de Mercado Pago (Card Payment Brick): la tarjeta se escribe en el navegador y nunca toca nuestro servidor. Al enviarlo, el navegador llama a `POST /payments/online` con **solo** el token de un solo uso, el medio de pago, el comprobante y `expectedAmountCents`. El correo del pagador no lo envía el navegador: el servidor lo toma de la cuenta del cliente.
 2. El servidor valida el carrito (OPEN, con ítems, sin QR activo y con stock) y el comprobante, calcula el total de oferta (**nunca** CMR) y, si no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo.
-3. Crea un `PaymentAttempt` en estado `CREATED` con el hash (SHA-256) del token y, **solo después**, crea la order en Mercado Pago con `X-Idempotency-Key` estable por intento y `external_reference` derivado del attemptId (mayúsculas alfanuméricas, sin guiones). Un token ya usado devuelve el resultado anterior sin cobrar de nuevo.
+3. Crea un `PaymentAttempt` en estado `CREATED` con el hash (SHA-256) del token y, **solo después**, crea la order en Mercado Pago con `X-Idempotency-Key` estable por intento y `external_reference` derivado del attemptId (mayúsculas alfanuméricas, sin guiones). Un token ya usado, cualquiera que haya sido el resultado anterior, responde `409 PAYMENT_TOKEN_INVALID` sin cobrar. El cliente revisa su historial de compras antes de reintentar.
 4. Rechazo de Mercado Pago: attempt `FAILED` con `failureCode` y respuesta `402 PAYMENT_DECLINED`, sin cambiar nada (ni carrito ni stock).
 5. Aprobado: dentro de **una sola transacción**, el carrito pasa a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied = NORMAL`, marca y últimos 4 dígitos (solo informativos) y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
 6. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/orders/{id}/refund` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
