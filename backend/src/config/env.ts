@@ -38,6 +38,8 @@ const schema = z.object({
     message: 'Debe tener al menos 32 caracteres',
   }),
   JWT_EXPIRES_IN: z.string().default('1h'),
+  /** Access Token de Mercado Pago (solo servidor). Opcional: los scripts fallan con un mensaje claro si falta. */
+  MP_ACCESS_TOKEN: z.string().optional().default(''),
   /** ID de cliente OAuth de Google; si no se configura, /auth/google responde 503. */
   GOOGLE_CLIENT_ID: z.string().trim().default(''),
   /** Solo con "true" y NODE_ENV=development se registra POST /auth/dev-login. */

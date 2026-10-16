@@ -1,4 +1,5 @@
-﻿import type { RouteObject } from 'react-router-dom';
+﻿import MercadoPagoDev from './pages/dev/MercadoPago';
+import type { RouteObject } from 'react-router-dom';
 import { AdminLayout } from './components/AdminLayout';
 import { CashierLayout } from './components/CashierLayout';
 import { ClientLayout } from './components/ClientLayout';
@@ -76,6 +77,8 @@ export const routes: RouteObject[] = [
       { path: 'today', element: <TodaySales /> },
     ],
   },
+  // Página de prueba de humo del Brick, solo en desarrollo (T3.5a).
+  ...(import.meta.env.DEV ? [{ path: '/dev/mercadopago', element: <MercadoPagoDev /> }] : []),
   // Cualquier ruta desconocida: cada rol ve su 404 con enlace a su inicio (T2.10).
   { path: '*', element: <NotFound /> },
 ];

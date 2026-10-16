@@ -277,7 +277,7 @@ model Sale {
   cardBrand          String?       // solo pagos en línea
   cardLast4          String?
   cardIssuer         String?
-  mpPaymentId        String?
+  mpOrderId          String?
   deliveredAt        DateTime?
   createdAt          DateTime      @default(now())
   items              SaleItem[]
@@ -310,7 +310,7 @@ model PaymentAttempt {
   amountCents   Int
   isCmr         Boolean
   status        PaymentAttemptStatus @default(CREATED)
-  mpPaymentId   String?
+  mpOrderId     String?
   failureCode   String?
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
@@ -403,10 +403,10 @@ Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intento
 3. El cliente ve "Detectamos una tarjeta CMR. Pagarás S/ X" o "Esta tarjeta no es CMR. Pagarás S/ Y" y confirma, con una cuenta regresiva de 4 minutos (decisión de diseño nuestra).
 4. **Cobro:** el navegador llama a `POST /payments/online` con el mismo token, el comprobante y `expectedAmountCents`. El servidor vuelve a calcular; si el monto no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo. Valida el carrito (OPEN, con ítems, sin QR activo y con stock) y el comprobante.
 5. Antes de cobrar crea un `PaymentAttempt` en estado `CREATED` con `tokenId` único. Un token ya usado devuelve el resultado anterior sin cobrar de nuevo.
-6. Cobra con `POST /v1/payments` de Mercado Pago: `transaction_amount` en soles con 2 decimales (céntimos / 100, convertido solo en el borde con una función pura), `token`, `installments` 1, `payment_method_id` e `issuer_id` enviados por el Brick, `payer.email` = correo de la cuenta del cliente (nunca el del navegador), `external_reference` = `attemptId`, y la cabecera `X-Idempotency-Key` = `attemptId`.
+6. Cobra con `POST /v1/orders` de Mercado Pago: `amount` como texto con 2 decimales (céntimos / 100, convertido solo en el borde con una función pura), `token`, `installments` 1, `payment_method_id` e `issuer_id` enviados por el Brick, `payer.email` = correo de la cuenta del cliente (nunca el del navegador), `external_reference` = `attemptId`, y la cabecera `X-Idempotency-Key` = `attemptId`.
 7. Resultado: `approved` sigue al punto 8; `rejected` deja el attempt `FAILED` con `failureCode = status_detail` y responde `402 PAYMENT_DECLINED` sin cambiar stock ni carrito; `in_process` o `pending` deja el attempt `IN_PROCESS` y responde `503 PAYMENT_UNCERTAIN` con "Tu pago está en revisión. No lo repitas: avisa en caja con este código".
-8. Aprobado: el attempt queda `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor, `mpPaymentId` y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
-9. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/payments/{id}/refunds` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
+8. Aprobado: el attempt queda `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor, `mpOrderId` y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
+9. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/orders/{id}/refund` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
 10. Si el cobro agota el tiempo o hay un error de red: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`. El script de conciliación podrá consultar a Mercado Pago (solo lectura) por `external_reference` para ayudar a resolverlo.
 11. Nunca se guardan el número completo, el CVV ni el vencimiento. El Access Token solo vive en el servidor.
 
