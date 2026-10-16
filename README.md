@@ -72,7 +72,6 @@ Nunca se sube ningún `.env` a Git (solo `.env.example`). No pongas valores real
 | `MP_ACCESS_TOKEN` | Solo para el pago en línea opcional con Mercado Pago. Déjalo vacío si no lo usas. |
 | `ADMIN_EMAIL` | Correo del admin inicial que crea `npm run db:seed`. |
 | `ADMIN_PASSWORD` | Contraseña del admin inicial (mínimo 8 caracteres). |
-| `CMR_BINS` | BIN de prueba que el demo trata como CMR (por ejemplo `411111`). En producción la lista la entrega el banco. |
 
 Si la contraseña de MySQL tiene caracteres especiales (`@`, `:`, `/`, `#`…), escríbela codificada para URL en `DATABASE_URL`. Lo más simple para el prototipo es usar una clave sin esos caracteres.
 

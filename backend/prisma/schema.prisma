@@ -56,6 +56,16 @@ enum CampaignScope {
   STORE
 }
 
+enum PaymentAttemptStatus {
+  CREATED
+  FAILED
+  APPROVED
+  SALE_CREATED
+  REFUNDED
+  REFUND_FAILED
+  UNKNOWN
+}
+
 model User {
   id            Int               @id @default(autoincrement())
   email         String            @unique
@@ -70,6 +80,7 @@ model User {
   customerSales Sale[]            @relation("CustomerSales")
   adjustments   StockAdjustment[]
   scans         ProductScan[]
+  paymentAttempts PaymentAttempt[]
 }
 
 model Category {
@@ -177,6 +188,7 @@ model Cart {
   updatedAt   DateTime   @updatedAt
   items       CartItem[]
   sale        Sale?
+  paymentAttempts PaymentAttempt[]
 }
 
 model CartItem {
@@ -235,6 +247,22 @@ model SaleItem {
   paidPriceCents     Int // precio unitario realmente cobrado
   subtotalCents      Int // paidPriceCents × cantidad
   campaignName       String?
+}
+
+model PaymentAttempt {
+  id                Int                  @id @default(autoincrement())
+  tokenHash         String               @unique // SHA-256 del token de Mercado Pago; nunca el token en claro
+  cartId            Int
+  cart              Cart                 @relation(fields: [cartId], references: [id])
+  customerId        Int
+  customer          User                 @relation(fields: [customerId], references: [id])
+  amountCents       Int
+  status            PaymentAttemptStatus @default(CREATED)
+  mpOrderId         String?
+  externalReference String               @unique // derivado del attemptId: mayúsculas alfanuméricas, sin guiones
+  failureCode       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 }
 
 model DocumentSeries {
