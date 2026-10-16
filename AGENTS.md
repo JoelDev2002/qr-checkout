@@ -43,8 +43,9 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 13. **Los precios normal y CMR no se guardan en el producto:** se calculan con `domain/pricing.ts` (campañas vigentes con su prioridad, y descuento CMR sobre el precio de oferta). Cada venta guarda su copia.
 14. Se guardan las **reglas** de descuento, no los resultados: porcentajes en puntos básicos (2850 = 28.50 %) y montos fijos en céntimos. Los porcentajes que ve el cliente se calculan y se redondean a entero. Los precios se redondean al céntimo, mitad hacia arriba.
 15. El frontend no calcula precios: los pide al servidor (por ejemplo, `POST /products/price-preview`).
-16. En pagos en línea el servidor decide el monto: identifica la tarjeta CMR por BIN (`CMR_BINS`) con los datos que entrega Mercado Pago, nunca con los del navegador. Jamás guardar número completo, CVV ni vencimiento de tarjetas.
+16. el servidor decide el monto y siempre cobra el total de oferta; nunca acepta del navegador un dato que cambie el precio (BIN, “es CMR”, marca); nunca guarda el número de tarjeta, el CVV, el vencimiento ni el token en claro (solo su hash).
 17. Cada venta guarda sus totales (original, oferta, CMR y cobrado), su número de comprobante correlativo y la copia de los precios de cada ítem.
+18. Las credenciales de pasarelas conectadas a OpenCode o a su MCP son solo de prueba.
 
 ## Convenciones de código
 - TypeScript estricto (`strict: true`), sin `any` salvo justificación en un comentario.
