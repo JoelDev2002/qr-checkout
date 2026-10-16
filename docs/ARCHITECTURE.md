@@ -119,7 +119,7 @@ enum DocType       { TICKET BOLETA FACTURA }
 enum FieldType     { TEXT NUMBER SELECT BOOLEAN }
 enum DiscountType   { PERCENT FIXED }
 enum CampaignScope  { PRODUCTS CATEGORIES STORE }
-enum PaymentAttemptStatus { CREATED FAILED CHARGED SALE_CREATED REFUNDED REFUND_FAILED UNKNOWN IN_PROCESS }
+enum PaymentAttemptStatus { CREATED FAILED APPROVED SALE_CREATED REFUNDED REFUND_FAILED UNKNOWN }
 
 model User {
   id           Int               @id @default(autoincrement())
@@ -274,9 +274,8 @@ model Sale {
   buyerDocNumber     String?
   buyerName          String?
   buyerEmail         String?
-  cardBrand          String?       // solo pagos en línea
+  cardBrand          String?       // solo pagos en línea: informativos, los informa el navegador y no deciden nada
   cardLast4          String?
-  cardIssuer         String?
   mpOrderId          String?
   deliveredAt        DateTime?
   createdAt          DateTime      @default(now())
@@ -301,19 +300,19 @@ model SaleItem {
 }
 
 model PaymentAttempt {
-  id            Int                  @id @default(autoincrement())
-  tokenId       String               @unique // token de Mercado Pago, de un solo uso
-  cartId        Int
-  cart          Cart                 @relation(fields: [cartId], references: [id])
-  customerId    Int
-  customer      User                 @relation(fields: [customerId], references: [id])
-  amountCents   Int
-  isCmr         Boolean
-  status        PaymentAttemptStatus @default(CREATED)
-  mpOrderId     String?
-  failureCode   String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
+  id                 Int                  @id @default(autoincrement())
+  tokenHash          String               @unique // SHA-256 del token de Mercado Pago; nunca el token en claro
+  cartId             Int
+  cart               Cart                 @relation(fields: [cartId], references: [id])
+  customerId         Int
+  customer           User                 @relation(fields: [customerId], references: [id])
+  amountCents        Int
+  status             PaymentAttemptStatus @default(CREATED)
+  mpOrderId          String?
+  externalReference  String               @unique // derivado del attemptId: mayúsculas alfanuméricas, sin guiones
+  failureCode        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 }
 
 model DocumentSeries {
@@ -369,11 +368,10 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | GET `/checkout/sales/today` | cajero | Cobros del día |
 | GET, POST, PATCH `/users` | admin | Gestión de cajeros |
 | GET `/dashboard/summary` | admin | Métricas por rango de fechas |
-| POST `/payments/online/preview` | cliente | Recibe el token de Mercado Pago, obtiene de él el BIN, la marca, el emisor y los últimos 4 dígitos, decide si es CMR (`CMR_BINS`) y devuelve el monto exacto a pagar (sección 7) |
-| POST `/payments/online` | cliente | Cobra con Mercado Pago el monto decidido por el servidor y crea la venta (sección 7) |
+| POST `/payments/online` | cliente | Cobra con Mercado Pago siempre el total de oferta y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |
 
-Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_TOKEN_INVALID`, `PAYMENT_NOT_CONFIGURED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
+Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE`, `CART_LOCKED`, `QR_EXPIRED`, `CART_NOT_PENDING`, `ALREADY_PAID`, `INVALID_DOCUMENT`, `DUPLICATE_BARCODE`, `CONFLICT`, `INVALID_ATTRIBUTES`, `PAYMENT_DECLINED`, `AMOUNT_CHANGED`, `PAYMENT_UNCERTAIN`, `PAYMENT_NOT_CONFIGURED`, `ALREADY_DELIVERED`, `NOT_FOUND`, `FORBIDDEN`, `VALIDATION_ERROR`.
 
 ## 7. Flujo crítico: QR y cobro
 
@@ -397,24 +395,21 @@ Códigos de error usados: `PRODUCT_NOT_FOUND`, `OUT_OF_STOCK`, `MAX_PER_PURCHASE
 
 Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intentos por usuario, para que nadie pueda adivinar códigos.
 
-**Pago en línea** (`POST /payments/online/preview` y `POST /payments/online`)
-1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y pulsa **Pagar con tarjeta**. El navegador muestra el Card Payment Brick de Mercado Pago, donde se escribe la tarjeta; esos datos nunca pasan por nuestro servidor. Al enviarlo, el Brick entrega un token de un solo uso y datos como `payment_method_id` e `issuer_id`.
-2. **Vista previa:** el navegador envía solo el token y los datos del comprobante a `POST /payments/online/preview`. El servidor obtiene el BIN, la marca, el emisor y los últimos 4 dígitos del token con el mecanismo que se compruebe en la T3.5a (no se inventa), y decide si es CMR comparando el BIN con `CMR_BINS`; ante cualquier duda, no es CMR. Devuelve el monto exacto (total CMR si es CMR; si no, total de oferta) y los datos de la tarjeta. No cobra ni guarda nada.
-3. El cliente ve "Detectamos una tarjeta CMR. Pagarás S/ X" o "Esta tarjeta no es CMR. Pagarás S/ Y" y confirma, con una cuenta regresiva de 4 minutos (decisión de diseño nuestra).
-4. **Cobro:** el navegador llama a `POST /payments/online` con el mismo token, el comprobante y `expectedAmountCents`. El servidor vuelve a calcular; si el monto no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo. Valida el carrito (OPEN, con ítems, sin QR activo y con stock) y el comprobante.
-5. Antes de cobrar crea un `PaymentAttempt` en estado `CREATED` con `tokenId` único. Un token ya usado devuelve el resultado anterior sin cobrar de nuevo.
-6. Cobra con `POST /v1/orders` de Mercado Pago: `amount` como texto con 2 decimales (céntimos / 100, convertido solo en el borde con una función pura), `token`, `installments` 1, `payment_method_id` e `issuer_id` enviados por el Brick, `payer.email` = correo de la cuenta del cliente (nunca el del navegador), `external_reference` = `attemptId`, y la cabecera `X-Idempotency-Key` = `attemptId`.
-7. Resultado: `approved` sigue al punto 8; `rejected` deja el attempt `FAILED` con `failureCode = status_detail` y responde `402 PAYMENT_DECLINED` sin cambiar stock ni carrito; `in_process` o `pending` deja el attempt `IN_PROCESS` y responde `503 PAYMENT_UNCERTAIN` con "Tu pago está en revisión. No lo repitas: avisa en caja con este código".
-8. Aprobado: el attempt queda `CHARGED` y, dentro de **una sola transacción**, el carrito pasa de OPEN a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied`, marca, últimos 4 dígitos, emisor, `mpOrderId` y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
-9. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/orders/{id}/refund` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
-10. Si el cobro agota el tiempo o hay un error de red: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`. El script de conciliación podrá consultar a Mercado Pago (solo lectura) por `external_reference` para ayudar a resolverlo.
-11. Nunca se guardan el número completo, el CVV ni el vencimiento. El Access Token solo vive en el servidor.
+**Pago en línea** (`POST /payments/online`)
+1. El cliente elige el comprobante (ticket, boleta con DNI o factura con RUC) y paga en el formulario de tarjeta de Mercado Pago (Card Payment Brick): la tarjeta se escribe en el navegador y nunca toca nuestro servidor. Al enviarlo, el navegador llama a `POST /payments/online` con **solo** el token de un solo uso, el medio de pago, el correo, el comprobante y `expectedAmountCents`.
+2. El servidor valida el carrito (OPEN, con ítems, sin QR activo y con stock) y el comprobante, calcula el total de oferta (**nunca** CMR) y, si no coincide con `expectedAmountCents`, responde `409 AMOUNT_CHANGED` con el monto nuevo.
+3. Crea un `PaymentAttempt` en estado `CREATED` con el hash (SHA-256) del token y, **solo después**, crea la order en Mercado Pago con `X-Idempotency-Key` estable por intento y `external_reference` derivado del attemptId (mayúsculas alfanuméricas, sin guiones). Un token ya usado devuelve el resultado anterior sin cobrar de nuevo.
+4. Rechazo de Mercado Pago: attempt `FAILED` con `failureCode` y respuesta `402 PAYMENT_DECLINED`, sin cambiar nada (ni carrito ni stock).
+5. Aprobado: dentro de **una sola transacción**, el carrito pasa a PAID (actualización condicionada), se descuenta el stock (condicionado), se asigna el número de comprobante y se crea la `Sale` con `paymentMethod = ONLINE`, `priceApplied = NORMAL`, marca y últimos 4 dígitos (solo informativos) y el código `O-XXXXX`. El attempt queda `SALE_CREATED`.
+6. Si la transacción falla después de haber cobrado: se reembolsa el total con `POST /v1/orders/{id}/refund` (sin monto, con `X-Idempotency-Key`) y el attempt pasa a `REFUNDED`; si el reembolso también falla, queda `REFUND_FAILED` para revisión manual.
+7. Tiempo agotado, error de red o estado no documentado como aprobado o rechazado: no se reembolsa ni se reintenta; el attempt queda `UNKNOWN` y se responde `503 PAYMENT_UNCERTAIN`. El script de conciliación podrá consultar a Mercado Pago (solo lectura) por `external_reference` para ayudar a resolverlo.
+8. Nunca se guardan el número de tarjeta, el CVV, el vencimiento ni el token en claro (solo su hash). El Access Token solo vive en el servidor.
 
 **Salida:** el cliente muestra el QR con el código `O-XXXXX`. El cajero lo verifica (`POST /checkout/exit/:code/verify`) y se guarda `deliveredAt`; una segunda verificación responde `ALREADY_DELIVERED`.
 
 **Numeración:** al crear cada venta, dentro de la misma transacción, se incrementa de forma atómica el contador de su serie en `DocumentSeries` (T001 ticket, B001 boleta, F001 factura) y se arma `receiptNumber`, por ejemplo `B001-000124`.
 
-**Qué se guarda de la tarjeta:** solo marca, últimos 4 dígitos y banco emisor. Nunca el número completo, el CVV ni el vencimiento.
+**Qué se guarda de la tarjeta:** solo marca y últimos 4 dígitos, que informa el navegador y no deciden nada. Nunca el número de tarjeta, el CVV ni el vencimiento.
 
 ## 8. Seguridad
 
@@ -423,7 +418,7 @@ Para la ruta de vista previa (`GET /checkout/:code`), aplicar límite de intento
 - Contraseñas con bcrypt. JWT con expiración corta. Secretos solo en `.env`.
 - Validar con Zod todos los cuerpos, parámetros y consultas.
 - `helmet`, CORS limitado a `FRONTEND_URL` y `express-rate-limit` en login y checkout.
-- Los datos de tarjeta jamás pasan por el servidor (con Mercado Pago, el Card Payment Brick los tokeniza en el navegador). En un pago en línea, el monto y el "es CMR" los decide el servidor; nunca se aceptan los que envíe el navegador.
+- Los datos de tarjeta jamás pasan por el servidor (con Mercado Pago, el Card Payment Brick los tokeniza en el navegador). En un pago en línea, el monto lo decide el servidor: siempre el total de oferta, nunca un precio que envíe el navegador. La marca y los últimos 4 dígitos que informa el navegador se guardan solo como informativos y no deciden nada.
 - Los mensajes de error no revelan detalles internos.
 - Decisión de prototipo: la sesión vive en `localStorage` (`frontend/src/lib/session.ts`) para no montar un servidor de sesión en el MVP; el token lo firma y verifica el backend. En producción convendría mover la sesión a una cookie `httpOnly` (más `Secure` y `SameSite`) para que el JavaScript del navegador no pueda leer el token; queda fuera del alcance actual.
 
@@ -451,8 +446,6 @@ MP_ACCESS_TOKEN=
 # Admin inicial que crea `npm run db:seed`
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
-# BIN de prueba que el demo trata como CMR; en producción la lista la entrega el banco
-CMR_BINS=411111
 ```
 
 `frontend/.env`
@@ -492,7 +485,7 @@ Se sube a Git solo `.env.example` (mismos nombres, sin valores). Los `.env` van 
 
   Con cantidad 1 cada uno, el resumen debe dar: productos `1685590`, descuentos `699100`, total `986490`, total con CMR `947290`, ahorro con CMR `39200`.
 - **Precios (`resolvePrices`):** original `10000` con campaña `PERCENT` de `3000` bps → oferta `7000`; con CMR de `500` bps → `6650`. Con campaña `FIXED` de `1500` céntimos → oferta `8500`. Casos a cubrir: sin campaña; alcance tienda, categorías y productos; dos campañas con distinta prioridad (gana la mayor); misma prioridad (gana la que más ahorra); empate total (gana el `id` mayor); campaña inactiva, vencida o futura (se ignora); monto fijo mayor o igual al original (no aplica); producto sin CMR (cmr = oferta); redondeo de mitad hacia arriba (original `1005` con `1000` bps → `905`).
-- También probar: cuotas con céntimos sobrantes, validación de EAN-13, generación del código de carrito y validación de campos adicionales (tipos, obligatorios, valores fuera de la lista); pago en línea con tarjeta CMR y no CMR, tarjeta rechazada (no cambia nada) y doble verificación de salida; números de comprobante correlativos sin repetirse.
+- También probar: cuotas con céntimos sobrantes, validación de EAN-13, generación del código de carrito y validación de campos adicionales (tipos, obligatorios, valores fuera de la lista); pago en línea siempre al total de oferta, con monto no coincidente (`AMOUNT_CHANGED`), tarjeta rechazada (no cambia nada) y doble verificación de salida; números de comprobante correlativos sin repetirse.
 - **Supertest sobre la API** con la base `qrcheckout_test`: flujo cliente → QR → cajero, QR vencido, doble cobro, stock insuficiente, permisos por rol.
 
 ## 11. Códigos de barras internos
@@ -528,8 +521,8 @@ El script valida cada producto con las mismas reglas de la API (código único, 
 - Monolito modular en lugar de microservicios.
 - Sin importación masiva en la interfaz: bastan 20 a 30 productos y una semilla.
 - Comprobante simulado imprimible desde el navegador (imprimir o guardar como PDF).
-- El pago en línea con Mercado Pago y la verificación de salida son opcionales y van al final. En línea, el servidor identifica la tarjeta CMR por BIN (`CMR_BINS`) y decide el monto.
-- Cada venta guarda los totales original, de oferta, CMR y cobrado, un número de comprobante correlativo y, en pagos en línea, marca, últimos 4 dígitos y banco emisor de la tarjeta.
+- El pago en línea con Mercado Pago y la verificación de salida son opcionales y van al final. En línea se cobra **siempre el total de oferta**; el precio CMR solo se aplica en caja, donde el cajero comprueba la tarjeta. Motivo comprobado en la prueba de humo (ver `MERCADOPAGO_REFERENCE.md`): la pasarela no permite al servidor verificar que la tarjeta sea CMR.
+- Cada venta guarda los totales original, de oferta, CMR y cobrado, un número de comprobante correlativo y, en pagos en línea, marca y últimos 4 dígitos de la tarjeta (informativos, los informa el navegador y no deciden nada).
 - Campos adicionales por categoría definidos por el admin y guardados en JSON dentro del producto.
 - Descuentos regulares solo por campañas que guardan su regla (porcentaje o monto fijo), con alcance por productos, categorías o toda la tienda, fechas, interruptor y prioridad; gana una sola, sin acumular.
 - Descuento CMR por producto, en porcentaje sobre el precio de oferta.
