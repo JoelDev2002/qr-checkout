@@ -1,4 +1,4 @@
-import { Prisma, type PaymentAttemptStatus, type DocType } from '@prisma/client';
+﻿import { Prisma, type PaymentAttemptStatus, type DocType } from '@prisma/client';
 import { generateExitCode } from '../../domain/cartCode.js';
 import { formatReceiptNumber } from '../../domain/document.js';
 import { toExternalReference } from '../../domain/mpAmount.js';
@@ -36,9 +36,19 @@ const attemptSelect = {
   failureCode: true,
 } satisfies Prisma.PaymentAttemptSelect;
 
+/** Una fila del script de conciliación: incluye al cliente, nunca datos de tarjeta (T3.5d). */
+export type ReconcileAttemptRecord = {
+  attemptId: number;
+  mpOrderId: string | null;
+  amountCents: number;
+  customerEmail: string;
+  status: PaymentAttemptStatus;
+  createdAt: Date;
+};
+
 /**
  * Falla prevista al escribir la venta en línea. Se lanza dentro de la transacción para que Prisma
- * revierta carrito, stock y numeración; el servicio responde un 500 genérico sin reembolsar (T3.5d).
+ * revierta carrito, stock y numeración; el servicio reembolsa el cobro (T3.5d).
  */
 export class OnlineSaleConflict extends Error {
   constructor(
@@ -126,6 +136,58 @@ export async function setAttemptApproved(attemptId: number, mpOrderId: string): 
   });
 }
 
+/** El cobro se reembolsó por completo tras fallar la venta (ARCHITECTURE.md §7, paso 6). */
+export async function setAttemptRefunded(attemptId: number): Promise<void> {
+  await prisma.paymentAttempt.update({
+    where: { id: attemptId },
+    data: { status: 'REFUNDED' },
+  });
+}
+
+/** El reembolso no se pudo hacer: queda para revisión manual (ARCHITECTURE.md §7, paso 6). */
+export async function setAttemptRefundFailed(
+  attemptId: number,
+  failureCode: string | null,
+): Promise<void> {
+  await prisma.paymentAttempt.update({
+    where: { id: attemptId },
+    data: { status: 'REFUND_FAILED', failureCode },
+  });
+}
+
+/**
+ * Intentos viejos que revisa el script de conciliación: CREATED, APPROVED, UNKNOWN o REFUND_FAILED
+ * creados antes del corte. Es de solo lectura y solo usa Prisma, nunca Mercado Pago (T3.5d).
+ */
+export async function findAttemptsForReconciliation(
+  cutoff: Date,
+): Promise<ReconcileAttemptRecord[]> {
+  const rows = await prisma.paymentAttempt.findMany({
+    where: {
+      status: { in: ['CREATED', 'APPROVED', 'UNKNOWN', 'REFUND_FAILED'] },
+      createdAt: { lt: cutoff },
+    },
+    select: {
+      id: true,
+      mpOrderId: true,
+      amountCents: true,
+      status: true,
+      createdAt: true,
+      customer: { select: { email: true } },
+    },
+    orderBy: { id: 'asc' },
+  });
+
+  return rows.map((row) => ({
+    attemptId: row.id,
+    mpOrderId: row.mpOrderId,
+    amountCents: row.amountCents,
+    customerEmail: row.customer.email,
+    status: row.status,
+    createdAt: row.createdAt,
+  }));
+}
+
 /** La venta de un intento ya cobrado, para devolverla sin volver a cobrar (RN-28). */
 export async function findSaleByCartId(cartId: number): Promise<SaleRecord | null> {
   const row = await prisma.sale.findUnique({ where: { cartId }, select: saleSelect });
@@ -175,7 +237,7 @@ export type CreateOnlinePaidSaleInput = {
  * ARCHITECTURE.md §7: una sola transacción para la venta en línea. El carrito pasa de OPEN a PAID con
  * una actualización condicionada, cada ítem baja su stock condicionado a la cantidad, y solo entonces
  * se numera el comprobante, se crea la venta y el intento queda en SALE_CREATED. Si algo falla, la
- * excepción revierte todo y el intento sigue APPROVED para la conciliación de T3.5d.
+ * excepción revierte todo y el servicio reembolsa el cobro (T3.5d).
  */
 export async function createOnlinePaidSale(input: CreateOnlinePaidSaleInput): Promise<SaleRecord> {
   return prisma.$transaction(

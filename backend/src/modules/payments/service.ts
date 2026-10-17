@@ -1,4 +1,4 @@
-import { isQrExpired } from '../../domain/cart.js';
+﻿import { isQrExpired } from '../../domain/cart.js';
 import { resolveOnlineCharge, type Charge } from '../../domain/checkout.js';
 import { docSeriesOf, resolveBuyer, type Buyer } from '../../domain/document.js';
 import { hashToken, idempotencyKeyFor } from '../../domain/mpAmount.js';
@@ -25,6 +25,8 @@ import {
   generateUniqueExitCode,
   setAttemptApproved,
   setAttemptFailed,
+  setAttemptRefundFailed,
+  setAttemptRefunded,
   setAttemptUnknown,
 } from './repository.js';
 import type { OnlinePaymentInput } from './schemas.js';
@@ -33,15 +35,24 @@ import type { OnlinePaymentInput } from './schemas.js';
 const ONLINE_PAYMENT_TYPE = 'credit_card';
 const ONLINE_PAYMENT_INSTALLMENTS = 1;
 
+/** Operación del reembolso: clave de idempotencia estable por intento (T3.5d). */
+const REFUND_OPERATION = 'REEMBOLSO';
+
 const NOT_CONFIGURED_MESSAGE =
   'El pago en línea no está configurado en este servidor. Revisa MP_ACCESS_TOKEN.';
 const TOKEN_INVALID_MESSAGE = 'Ese token de pago ya se usó. Vuelve a ingresar la tarjeta.';
 const ALREADY_PAID_MESSAGE = 'Este carrito ya fue cobrado.';
 const DECLINED_MESSAGE = 'El banco rechazó la tarjeta. Prueba con otra tarjeta.';
+/** Cobro incierto: no se reintenta ni se reembolsa (ARCHITECTURE.md §7, paso 7). */
 const UNCERTAIN_MESSAGE =
-  'No pudimos confirmar el pago con el banco. El intento quedó pendiente de revisión.';
+  'No pudimos confirmar tu pago. No lo repitas: avisa en caja con este código: ';
 const AMOUNT_CHANGED_MESSAGE = 'El total de la compra cambió. Revisa el carrito y vuelve a intentarlo.';
 const INTERNAL_ERROR_MESSAGE = 'Ocurrió un error inesperado.';
+/** La venta falló después de cobrar y el reembolso sí se hizo (ARCHITECTURE.md §7, paso 6). */
+const POST_CHARGE_REFUNDED_MESSAGE = 'No pudimos completar la compra. Te devolvimos el dinero.';
+/** La venta falló después de cobrar y el reembolso también falló: revisión manual (T3.5d). */
+const POST_CHARGE_MANUAL_MESSAGE =
+  'Hubo un problema con tu pago. Avisa en caja con este código: ';
 
 function requireBuyer(input: OnlinePaymentInput): Buyer {
   const resolution = resolveBuyer({
@@ -143,6 +154,37 @@ function failureCodeOf(error: unknown): string | null {
 }
 
 /**
+ * ARCHITECTURE.md §7, paso 6: el cobro ya se hizo pero la venta no. Se reembolsa el total y se
+ * responde 409 (OUT_OF_STOCK o CART_LOCKED según la causa). La clave de idempotencia es estable
+ * por intento, así que un reintento del reembolso no duplica el cobro. Si el reembolso falla, el
+ * intento queda REFUND_FAILED, se registra en consola sin datos de tarjeta y se responde 500.
+ */
+async function refundAfterFailedSale(
+  client: MercadoPagoClient,
+  attemptId: number,
+  orderId: string,
+  conflict: OnlineSaleConflict,
+): Promise<never> {
+  try {
+    await client.refundOrder({
+      orderId,
+      idempotencyKey: idempotencyKeyFor(attemptId, REFUND_OPERATION),
+    });
+    await setAttemptRefunded(attemptId);
+  } catch (error) {
+    await setAttemptRefundFailed(attemptId, failureCodeOf(error));
+    // Sin datos de tarjeta: solo el intento y la order, para poder conciliar a mano (T3.5d).
+    console.error(
+      `[payments] Reembolso fallido. attemptId=${attemptId} mpOrderId=${orderId}`,
+    );
+    throw new ApiError(500, 'INTERNAL_ERROR', `${POST_CHARGE_MANUAL_MESSAGE}${attemptId}`);
+  }
+
+  const code = conflict.reason === 'OUT_OF_STOCK' ? 'OUT_OF_STOCK' : 'CART_LOCKED';
+  throw new ApiError(409, code, POST_CHARGE_REFUNDED_MESSAGE);
+}
+
+/**
  * ARCHITECTURE.md §7: cobra el total de oferta con Mercado Pago y, si aprueba, crea la venta. El
  * intento (con el hash del token) queda registrado antes de llamar a la pasarela, así un token ya
  * usado nunca se vuelve a cobrar y cualquier fallo posterior queda revisable (RN-20, RN-28).
@@ -186,8 +228,9 @@ export async function processOnlinePayment(
     });
 
     if (order.status !== 'processed') {
+      // Estado no documentado como aprobado o rechazado: no se reembolsa ni se reintenta.
       await setAttemptUnknown(attempt.id, order.statusDetail);
-      throw new ApiError(503, 'PAYMENT_UNCERTAIN', UNCERTAIN_MESSAGE);
+      throw new ApiError(503, 'PAYMENT_UNCERTAIN', `${UNCERTAIN_MESSAGE}${attempt.id}`);
     }
 
     orderId = order.id;
@@ -201,8 +244,9 @@ export async function processOnlinePayment(
       throw new ApiError(402, 'PAYMENT_DECLINED', DECLINED_MESSAGE);
     }
 
+    // Tiempo agotado, error de red u otro fallo: el cobro pudo haberse hecho, no se toca.
     await setAttemptUnknown(attempt.id, failureCodeOf(error));
-    throw new ApiError(503, 'PAYMENT_UNCERTAIN', UNCERTAIN_MESSAGE);
+    throw new ApiError(503, 'PAYMENT_UNCERTAIN', `${UNCERTAIN_MESSAGE}${attempt.id}`);
   }
 
   await setAttemptApproved(attempt.id, orderId);
@@ -230,9 +274,9 @@ export async function processOnlinePayment(
 
     return toSaleView(sale);
   } catch (error) {
-    // El cobro ya ocurrió pero la venta no se pudo escribir: la conciliación de T3.5d lo reembolsa.
+    // El cobro ya ocurrió pero la venta no se pudo escribir: se reembolsa el total (T3.5d).
     if (error instanceof OnlineSaleConflict) {
-      throw new ApiError(500, 'INTERNAL_ERROR', INTERNAL_ERROR_MESSAGE);
+      return await refundAfterFailedSale(client, attempt.id, orderId, error);
     }
 
     throw error;

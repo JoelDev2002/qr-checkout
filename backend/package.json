@@ -10,6 +10,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "mp:payment-methods": "tsx scripts/mp-payment-methods.ts",
+    "payments:reconcile": "tsx scripts/payments-reconcile.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

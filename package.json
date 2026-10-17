@@ -11,6 +11,7 @@
     "dev:web": "npm run dev --workspace frontend",
     "test": "npm run test --workspaces --if-present",
     "db:migrate": "npm run db:migrate --workspace backend",
-    "db:seed": "npm run db:seed --workspace backend"
+    "db:seed": "npm run db:seed --workspace backend",
+    "payments:reconcile": "npm run payments:reconcile --workspace backend"
   }
 }
