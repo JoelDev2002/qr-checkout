@@ -6,7 +6,7 @@ const baseUrl = import.meta.env.VITE_API_URL ?? '/api';
 const PUBLIC_PATHS = ['/auth/login', '/auth/google', '/auth/dev-login', '/health'];
 
 type DataEnvelope<T> = { data: T };
-type ErrorEnvelope = { error: { code: string; message: string } };
+type ErrorEnvelope = { error: { code: string; message: string } & Record<string, unknown> };
 
 export type LoginResult = {
   token: string;
@@ -26,6 +26,8 @@ export class ApiError extends Error {
   constructor(
     readonly code: string,
     message: string,
+    /** Campos extra del error (por ejemplo el monto nuevo en AMOUNT_CHANGED). */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -91,7 +93,8 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (isErrorEnvelope(body)) {
-    throw new ApiError(body.error.code, body.error.message);
+    const { code, message, ...details } = body.error;
+    throw new ApiError(code, message, Object.keys(details).length > 0 ? details : undefined);
   }
 
   if (!isDataEnvelope<T>(body)) {

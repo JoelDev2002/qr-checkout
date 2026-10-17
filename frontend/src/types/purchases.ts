@@ -1,5 +1,7 @@
 import type { PaymentMethod, DocType } from '@prisma/client';
 
+export type { DocType };
+
 export type PriceApplied = 'NORMAL' | 'CMR';
 
 export type PurchaseSummary = {
@@ -51,3 +53,4 @@ export type PurchaseList = {
   pageSize: number;
   total: number;
 };
+

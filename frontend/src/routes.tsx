@@ -21,6 +21,7 @@ import HistoryPage from './pages/client/HistoryPage';
 import HistoryDetailPage from './pages/client/HistoryDetailPage';
 import { ScannerPage } from './pages/client/ScannerPage';
 import { CartPage } from './pages/client/CartPage';
+import { PayOnlinePage } from './pages/client/PayOnlinePage';
 import { QrPage } from './pages/client/QrPage';
 import { NotFound } from './pages/NotFound';
 
@@ -37,7 +38,8 @@ export const routes: RouteObject[] = [
     ),
     children: [
       { index: true, element: <ScannerPage /> },
-{ path: 'cart', element: <CartPage /> },
+      { path: 'cart', element: <CartPage /> },
+      { path: 'pay', element: <PayOnlinePage /> },
       { path: 'qr', element: <QrPage /> },
       { path: 'history', element: <HistoryPage /> },
       { path: 'history/:saleId', element: <HistoryDetailPage /> },

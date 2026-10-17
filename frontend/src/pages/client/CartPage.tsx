@@ -237,6 +237,12 @@ export function CartPage() {
           </p>
         )}
 
+        {!locked && !blocked && (
+          <button type="button" onClick={() => navigate('/pay')} className={secondaryButton}>
+            Pagar en línea
+          </button>
+        )}
+
         {confirmingClear ? (
           <div className="rounded-tag border border-line bg-paper p-3">
             <p className="text-base text-ink">¿Vaciar el carrito?</p>
