@@ -10,35 +10,18 @@ import {
   validateComprobante,
   type ComprobanteForm,
 } from '../../features/payments/comprobante';
+import { mountCardBrick, type CardBrickError } from '../../features/payments/cardBrick';
 import { mapApiError, type MappedPaymentResult } from '../../features/payments/errorMapper';
 import { payOnlineView } from '../../features/payments/payOnlineView';
 import { formatMoney } from '../../lib/money';
 import { ApiError } from '../../services/api';
 import { postOnlinePayment, type DocType, type OnlineSaleView } from '../../services/payments';
 
-// El SDK de MercadoPago.js y el controlador del Brick no traen tipos.
-type BrickController = { unmount: () => void };
-type MercadoPagoSdk = {
-  bricks: () => {
-    create: (brick: string, containerId: string, settings: unknown) => Promise<BrickController>;
-  };
-};
-
-declare global {
-  interface Window {
-    MercadoPago?: new (publicKey: string) => MercadoPagoSdk;
-    cardPaymentBrickController?: BrickController;
-  }
-}
-
-/** Lo que entrega el Brick al enviar (`CardData`) más los datos adicionales de la tarjeta. */
-type CardFormData = {
-  token: string;
-  payment_method_id: string;
-};
-
-type AdditionalData = {
-  lastFourDigits?: string;
+const BRICK_ERROR_MESSAGES: Record<CardBrickError, string> = {
+  download: 'No se pudo descargar MercadoPago.js.',
+  load: 'No se pudo cargar MercadoPago.js.',
+  create: 'No se pudo crear el formulario de tarjeta.',
+  brick: 'El formulario de tarjeta reportó un error. Inténtalo de nuevo.',
 };
 
 const primaryButton =
@@ -92,6 +75,11 @@ export function PayOnlinePage() {
     window.print();
   }
 
+  // Al entrar a /pay la pantalla arranca desde arriba, sin heredar el scroll del carrito.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     if (!comprobanteValid || !payable || result !== null) {
       return;
@@ -102,91 +90,54 @@ export function PayOnlinePage() {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'https://sdk.mercadopago.com/js/v2';
-    script.async = true;
+    return mountCardBrick({
+      containerId,
+      publicKey,
+      amount: offerTotalCents / 100,
+      handlers: {
+        onReady: () => setBrickError(null),
+        onError: (source) => setBrickError(BRICK_ERROR_MESSAGES[source]),
+        onSubmit: (data, additionalData) => {
+          if (submittingRef.current) {
+            return Promise.reject();
+          }
 
-    script.onload = () => {
-      const MercadoPagoCtor = window.MercadoPago;
+          submittingRef.current = true;
+          setSubmitting(true);
 
-      if (!MercadoPagoCtor) {
-        setBrickError('No se pudo cargar MercadoPago.js.');
-        return;
-      }
+          const lastFour = additionalData?.lastFourDigits;
+          const current = formRef.current;
 
-      const bricksBuilder = new MercadoPagoCtor(publicKey).bricks();
-      const settings = {
-        initialization: { amount: offerTotalCents / 100 },
-        callbacks: {
-          onReady: () => setBrickError(null),
-          onSubmit: (data: CardFormData, additionalData: AdditionalData) => {
-            if (submittingRef.current) {
-              return Promise.reject();
-            }
-
-            submittingRef.current = true;
-            setSubmitting(true);
-
-            const lastFour = additionalData?.lastFourDigits;
-            const current = formRef.current;
-
-            return postOnlinePayment(
-              buildPaymentBody({
-                token: data.token,
-                paymentMethodId: data.payment_method_id,
-                docType: current.docType,
-                buyerDocNumber: current.buyerDocNumber.trim() || undefined,
-                buyerName: current.buyerName.trim() || undefined,
-                expectedAmountCents: offerTotalCents,
-                cardLast4: lastFour ? String(lastFour) : undefined,
-              }),
-            )
-              .then((created) => {
-                setSale(created);
-                setResult({ kind: 'approved' });
-                void reload();
-              })
-              .catch((caught: unknown) => {
-                if (caught instanceof ApiError) {
-                  setResult(mapApiError(caught.code, caught.message, caught.details));
-                } else {
-                  setResult({ kind: 'error', message: 'Ocurrió un error inesperado.' });
-                }
-              })
-              .finally(() => {
-                submittingRef.current = false;
-                setSubmitting(false);
-              });
-          },
-          onError: () => {
-            setBrickError('El formulario de tarjeta reportó un error. Inténtalo de nuevo.');
-          },
+          return postOnlinePayment(
+            buildPaymentBody({
+              token: data.token,
+              paymentMethodId: data.payment_method_id,
+              docType: current.docType,
+              buyerDocNumber: current.buyerDocNumber.trim() || undefined,
+              buyerName: current.buyerName.trim() || undefined,
+              expectedAmountCents: offerTotalCents,
+              cardLast4: lastFour ? String(lastFour) : undefined,
+            }),
+          )
+            .then((created) => {
+              setSale(created);
+              setResult({ kind: 'approved' });
+              void reload();
+            })
+            .catch((caught: unknown) => {
+              if (caught instanceof ApiError) {
+                setResult(mapApiError(caught.code, caught.message, caught.details));
+              } else {
+                setResult({ kind: 'error', message: 'Ocurrió un error inesperado.' });
+              }
+            })
+            .finally(() => {
+              submittingRef.current = false;
+              setSubmitting(false);
+            });
         },
-      };
-
-      bricksBuilder
-        .create('cardPayment', containerId, settings)
-        .then((controller) => {
-          window.cardPaymentBrickController = controller;
-        })
-        .catch(() => {
-          setBrickError('No se pudo crear el formulario de tarjeta.');
-        });
-    };
-
-    script.onerror = () => setBrickError('No se pudo descargar MercadoPago.js.');
-
-    document.body.appendChild(script);
-
-    return () => {
-      try {
-        window.cardPaymentBrickController?.unmount();
-      } catch {
-        // Ignorado: el Brick ya pudo haberse desmontado.
-      }
-      delete window.cardPaymentBrickController;
-      script.remove();
-    };
+      },
+    });
   }, [comprobanteValid, payable, result, offerTotalCents, publicKey, reload]);
 
   if (view === 'loading') {
