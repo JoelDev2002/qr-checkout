@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useCart } from '../features/cart/CartContext';
+import { BrandLogo } from './BrandLogo';
 import { headerLinksFor } from '../lib/headerLinks';
 import { formatMoney } from '../lib/money';
 import { clearSession, readSession } from '../lib/session';
@@ -25,7 +26,7 @@ export function ClientLayout() {
     <div className="min-h-dvh bg-paper pb-28">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3">
-          <span className="text-lg font-bold text-ink">QRCheckout</span>
+          <BrandLogo />
           <div className="flex items-center gap-2">
             {headerLinks.map((link) => (
               <NavLink key={link.to} to={link.to} className={headerLinkClass}>

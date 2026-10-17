@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { clearSession, readSession } from '../lib/session';
+import { BrandLogo } from './BrandLogo';
 
 const linkClass = ({ isActive }: { isActive: boolean }): string =>
   `flex min-h-[44px] items-center rounded-button px-4 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
@@ -20,7 +21,10 @@ export function CashierLayout() {
     <div className="min-h-dvh bg-paper">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <span className="text-lg font-bold text-ink">QRCheckout · Caja</span>
+          <span className="flex items-center gap-2">
+            <BrandLogo />
+            <span className="text-lg font-bold text-ink">Caja</span>
+          </span>
           <div className="flex items-center gap-3">
             {session !== null && (
               <span className="hidden text-sm text-muted sm:inline">{session.user.name}</span>

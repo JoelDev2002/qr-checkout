@@ -1,6 +1,7 @@
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../components/BrandLogo';
 import { readGoogleCredential } from '../features/auth/googleCredential';
 import {
   clearSession,
@@ -75,7 +76,9 @@ export function Home() {
       <main className="min-h-dvh bg-paper px-4 py-6">
         <div className="mx-auto max-w-sm rounded-sheet border border-line bg-surface p-6">
           <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
-          <h1 className="mt-4 text-2xl font-bold text-ink">QRCheckout</h1>
+          <div className="mt-4">
+            <BrandLogo className="h-14 w-auto" />
+          </div>
           <p className="mt-2 text-base text-ink">Hola, {session.user.name}.</p>
           <p className="mt-1 text-base text-muted">
             Tu sesión está activa con {session.user.email}.
