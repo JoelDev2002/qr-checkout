@@ -1,6 +1,8 @@
 ﻿import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { Receipt } from '../../components/Receipt';
 import { useCart } from '../../features/cart/CartContext';
 import {
   buildPaymentBody,
@@ -9,6 +11,7 @@ import {
   type ComprobanteForm,
 } from '../../features/payments/comprobante';
 import { mapApiError, type MappedPaymentResult } from '../../features/payments/errorMapper';
+import { payOnlineView } from '../../features/payments/payOnlineView';
 import { formatMoney } from '../../lib/money';
 import { ApiError } from '../../services/api';
 import { postOnlinePayment, type DocType, type OnlineSaleView } from '../../services/payments';
@@ -62,6 +65,7 @@ export function PayOnlinePage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<MappedPaymentResult | null>(null);
   const [sale, setSale] = useState<OnlineSaleView | null>(null);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   // El Brick se monta una sola vez; al enviar leemos el comprobante actual desde una referencia
   // para no desmontarlo en cada tecla.
@@ -73,13 +77,20 @@ export function PayOnlinePage() {
   const comprobanteValid = isComprobanteValid(form);
 
   const offerTotalCents = cart?.summary.normalTotalCents ?? 0;
-  const payable = cart !== null && cart.status === 'OPEN' && cart.items.length > 0;
+  const view = payOnlineView({ cart, loading, result, sale });
+  const payable = view === 'payable';
 
+  // Con un QR de caja activo el carrito no se paga en línea; el resto de casos los resuelve la vista.
   useEffect(() => {
-    if (cart !== null && !payable) {
+    if (result === null && cart?.status === 'PENDING') {
       navigate('/cart', { replace: true });
     }
-  }, [cart, payable, navigate]);
+  }, [cart, result, navigate]);
+
+  function handlePrintReceipt(): void {
+    flushSync(() => setShowReceipt(true));
+    window.print();
+  }
 
   useEffect(() => {
     if (!comprobanteValid || !payable || result !== null) {
@@ -178,15 +189,15 @@ export function PayOnlinePage() {
     };
   }, [comprobanteValid, payable, result, offerTotalCents, publicKey, reload]);
 
-  if (cart === null) {
-    if (loading) {
-      return (
-        <p role="status" className="text-base text-muted">
-          Cargando…
-        </p>
-      );
-    }
+  if (view === 'loading') {
+    return (
+      <p role="status" className="text-base text-muted">
+        Cargando…
+      </p>
+    );
+  }
 
+  if (view === 'error') {
     return (
       <section className="rounded-sheet border border-line bg-surface p-4">
         <p role="alert" className="text-base text-cmr">
@@ -199,7 +210,7 @@ export function PayOnlinePage() {
     );
   }
 
-  if (result?.kind === 'approved' && sale) {
+  if (view === 'approved' && sale !== null) {
     return (
       <section className="flex flex-col items-center gap-6 rounded-sheet border border-line bg-surface p-6 text-center">
         <h1 className="text-lg font-semibold text-ink">Pago aprobado</h1>
@@ -212,13 +223,55 @@ export function PayOnlinePage() {
           <p className="text-sm text-muted">Muestra este QR al salir de la tienda</p>
         </div>
         <div className="flex w-full flex-col gap-3">
-          <Link to={`/history/${sale.id}`} className={primaryButton}>
+          <button type="button" onClick={() => setShowReceipt(true)} className={primaryButton}>
             Ver comprobante
-          </Link>
+          </button>
+          <button type="button" onClick={handlePrintReceipt} className={secondaryButton}>
+            Imprimir comprobante
+          </button>
           <Link to="/" className={secondaryButton}>
             Seguir comprando
           </Link>
         </div>
+
+        {showReceipt && (
+          <div className="w-full">
+            <Receipt
+              receiptNumber={sale.receiptNumber}
+              code={sale.code}
+              createdAt={sale.createdAt}
+              items={sale.items.map((item) => ({
+                name: item.name,
+                quantity: item.quantity,
+                subtotalCents: item.subtotalCents,
+              }))}
+              totalCents={sale.totalCents}
+              paymentMethod={sale.paymentMethod}
+              buyer={{
+                docType: sale.buyerDocType,
+                docNumber: sale.buyerDocNumber,
+                name: sale.buyerName,
+              }}
+            />
+          </div>
+        )}
+      </section>
+    );
+  }
+
+  if (view === 'nothingToPay') {
+    return (
+      <section className="flex flex-col items-center gap-4 rounded-sheet border border-line bg-surface p-6 text-center">
+        <h1 className="text-lg font-semibold text-ink">No hay nada que pagar</h1>
+        <p className="text-base text-ink">
+          Si ya pagaste, tu compra aparece en tu historial.
+        </p>
+        <Link to="/history" className={primaryButton}>
+          Ver historial
+        </Link>
+        <Link to="/" className={secondaryButton}>
+          Seguir comprando
+        </Link>
       </section>
     );
   }
