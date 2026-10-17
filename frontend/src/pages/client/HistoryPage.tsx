@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Receipt } from '../../components/Receipt';
 import { formatDateLima } from '../../lib/date';
@@ -38,6 +38,24 @@ export default function HistoryPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [detailKey, setDetailKey] = useState(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedId === null) {
+      return undefined;
+    }
+
+    panelRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSelectedId(null);
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId]);
 
   const loadPage = useCallback(async (nextPage: number, replace = false) => {
     setLoading(true);
@@ -179,9 +197,24 @@ export default function HistoryPage() {
       )}
 
       {selectedId !== null && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4">
-          <div className="mx-auto flex w-full max-w-[360px] flex-col gap-3">
-            <div className="flex justify-end">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)] p-2 sm:p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedId(null);
+            }
+          }}
+        >
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Comprobante"
+            tabIndex={-1}
+            className="flex max-h-[90dvh] w-full max-w-md flex-col overflow-hidden rounded-sheet border border-line bg-surface shadow-sheet focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
+              <h2 className="text-lg font-semibold text-ink">Comprobante</h2>
               <button
                 type="button"
                 onClick={() => setSelectedId(null)}
@@ -191,40 +224,42 @@ export default function HistoryPage() {
               </button>
             </div>
 
-            {detailLoading && (
-              <p role="status" className="rounded-sheet bg-surface p-4 text-sm text-muted">
-                Cargando detalle…
-              </p>
-            )}
+            <div className="flex flex-col gap-3 overflow-y-auto overflow-x-auto p-3 sm:p-4">
+              {detailLoading && (
+                <p role="status" className="rounded-sheet bg-surface p-4 text-sm text-muted">
+                  Cargando detalle…
+                </p>
+              )}
 
-            {detailError !== null && (
-              <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
-                <p className="text-sm text-cmr">{detailError}</p>
-                <button
-                  type="button"
-                  onClick={() => setDetailKey((key) => key + 1)}
-                  className={`${secondaryButton} mt-2`}
-                >
-                  Reintentar
-                </button>
-              </div>
-            )}
+              {detailError !== null && (
+                <div role="alert" className="rounded-tag border border-cmr bg-surface px-3 py-2">
+                  <p className="text-sm text-cmr">{detailError}</p>
+                  <button
+                    type="button"
+                    onClick={() => setDetailKey((key) => key + 1)}
+                    className={`${secondaryButton} mt-2`}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
 
-            {detail !== null && selectedSummary !== null && (
-              <div className="flex flex-col gap-3">
-                <Receipt
-                  receiptNumber={detail.receiptNumber}
-                  code={detail.code}
-                  createdAt={detail.createdAt}
-                  items={toDetailItems(detail.items)}
-                  totalCents={detail.totals.totalCents}
-                  paymentMethod={detail.paymentMethod}
-                />
-                <button type="button" onClick={() => window.print()} className={primaryButton}>
-                  Imprimir comprobante
-                </button>
-              </div>
-            )}
+              {detail !== null && selectedSummary !== null && (
+                <div className="flex flex-col gap-3">
+                  <Receipt
+                    receiptNumber={detail.receiptNumber}
+                    code={detail.code}
+                    createdAt={detail.createdAt}
+                    items={toDetailItems(detail.items)}
+                    totalCents={detail.totals.totalCents}
+                    paymentMethod={detail.paymentMethod}
+                  />
+                  <button type="button" onClick={() => window.print()} className={primaryButton}>
+                    Imprimir comprobante
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
