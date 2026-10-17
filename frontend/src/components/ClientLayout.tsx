@@ -26,7 +26,13 @@ export function ClientLayout() {
     <div className="min-h-dvh bg-paper pb-28">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3">
-          <BrandLogo />
+          <Link
+            to="/"
+            aria-label="Ir al escáner"
+            className="rounded-button focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          >
+            <BrandLogo />
+          </Link>
           <div className="flex items-center gap-2">
             {headerLinks.map((link) => (
               <NavLink key={link.to} to={link.to} className={headerLinkClass}>

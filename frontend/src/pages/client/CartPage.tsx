@@ -198,6 +198,12 @@ export function CartPage() {
         </p>
       )}
 
+      {!locked && (
+        <Link to="/" className={secondaryButton}>
+          Seguir escaneando
+        </Link>
+      )}
+
       <ul className="flex flex-col gap-3">
         {cart.items.map((item) => (
           <ProductRow

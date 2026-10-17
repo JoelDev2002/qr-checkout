@@ -3,6 +3,7 @@ import { DetailsList } from '../../components/DetailsList';
 import { PriceTag } from '../../components/PriceTag';
 import { Scanner } from '../../components/Scanner';
 import { useCart } from '../../features/cart/CartContext';
+import { CartPeek } from '../../features/cart/CartPeek';
 import { cartErrorMessage } from '../../features/cart/messages';
 import { QuantityStepper } from '../../features/cart/QuantityStepper';
 import { createQuantityDebouncer } from '../../features/cart/quantityDebounce';
@@ -203,6 +204,8 @@ export function ScannerPage() {
           )}
         </article>
       )}
+
+      {cart !== null && cart.items.length > 0 && <CartPeek items={cart.items} />}
     </section>
   );
 }
