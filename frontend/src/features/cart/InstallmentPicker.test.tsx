@@ -22,6 +22,7 @@ describe('InstallmentPicker', () => {
     expect(screen.getByRole('button', { name: '6' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByText(/o 6 cuotas de aprox\.\s+con CMR/)).toBeTruthy();
     expect(screen.getByText('S/ 1,578.82')).toBeTruthy();
+    expect(screen.getByText(/Solo referencial/)).toBeTruthy();
   });
 
   it('al elegir 3 cambia la línea a 3 cuotas', async () => {

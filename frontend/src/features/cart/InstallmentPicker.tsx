@@ -68,8 +68,9 @@ export function InstallmentPicker({ installments }: InstallmentPickerProps) {
       <p className="mt-3 text-base text-ink">
         o {selected.count} cuotas de aprox.{' '}
         <span className="font-semibold tabular-nums">{formatMoney(selected.installmentCents)}</span>{' '}
-        con CMR (sin intereses, solo informativo)
+        con CMR
       </p>
+      <p className="mt-1 text-sm text-muted">Solo referencial: no cambia lo que pagas.</p>
     </section>
   );
 }
