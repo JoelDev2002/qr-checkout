@@ -69,9 +69,10 @@ Total                S/  9,864.90
 Total con CMR        S/  9,472.90   (rojo, 700)
 Ahorras con CMR      S/    392.00   (verde)
 o 6 cuotas de aprox. S/ 1,578.82 con CMR
+Solo referencial: no cambia lo que pagas.
 ```
 
-**`Scanner`**: visor con marco guía, botón de linterna (si el celular lo permite), botón "Escribir código". Se reutiliza en cliente, cajero y admin. Estados: pidiendo permiso, escaneando, leído, error.
+**`Scanner`**: visor con marco guía, botón de linterna (si el celular lo permite), botón "Escribir código". Se reutiliza en cliente, cajero y admin. Estados: pidiendo permiso, escaneando, leído, error. Mientras pide permiso o hay error, el visor se ve en claro (`paper` con borde `line`) con un ícono de cámara y el texto; al escanear o leer pasa a fondo `ink` con el video. Forma `wide` (4/3) por defecto; el cajero usa `square`, porque solo lee el QR del carrito.
 
 **`QrTicket`**: tarjeta con forma de ticket (borde inferior en zigzag o perforado dibujado en CSS), QR grande, código en texto (`C-8F3K2`), cuenta regresiva y botón "Cancelar QR". Debajo de 2 minutos, la cuenta regresiva pasa a `warn`.
 
@@ -105,12 +106,12 @@ o 6 cuotas de aprox. S/ 1,578.82 con CMR
 │ PriceTag               │
 ├────────────────────────┤
 │ Carrito (3)  S/ 1,889  │
-│ con CMR   [Ver carrito]│
+│ con CMR         [Ver]  │
 └────────────────────────┘
 ```
 Debajo del último producto escaneado hay un bloque plegable **Detalles** (`DetailsList`) con los campos de su categoría. Junto al producto hay un **contador de cantidad** (`QuantityStepper`): botones − y +, y el número en medio se puede tocar para escribirlo. Escanear otra vez el mismo producto suma 1. Muestra el límite (por ejemplo, "máx. 10").
 
-Debajo hay un bloque plegable **En tu carrito (N)** (`CartPeek`) con todos los productos escaneados (nombre, cantidad, precio de oferta y precio CMR) y un enlace **Ver carrito**. El logo de la cabecera también vuelve al escáner.
+La barra inferior es un **mini-carrito** (`MiniCart`): muestra `Carrito (N)` con el total con CMR y, al tocar **Ver**, se despliega sobre la pantalla con la lista de productos y su **contador ±** (`QuantityStepper`) para cambiar cantidades sin salir del escáner, más un botón **Ver y editar carrito**. Se oculta dentro del carrito. El logo de la cabecera vuelve al escáner.
 3. **Carrito**: lista de `ProductRow`, `CartSummary`, botón secundario **Seguir escaneando** (vuelve al escáner), botón principal **Generar QR para caja**, botón secundario **Pagar en línea** (opcional) y botón **Vaciar carrito**, que pide confirmación en la misma pantalla ("¿Vaciar el carrito? Sí, vaciar / No") y no está disponible con un QR activo. Estado vacío: "Tu carrito está vacío. Escanea un producto para empezar."
 4. **QR**: `QrTicket` centrado, texto "Muéstraselo al cajero", botón **Cancelar QR**. El carrito no se puede editar mientras el QR está activo.
 5. **Historial**: lista de compras con fecha, total y medio de pago; detalle con `Receipt`.
