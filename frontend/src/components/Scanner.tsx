@@ -7,6 +7,8 @@ type ScannerProps = {
   onScan: (text: string) => void;
   /** Formatos que acepta el visor; por defecto todos (T1.13). En caja solo se pasa QR. */
   formats?: readonly BarcodeFormat[];
+  /** Forma del visor; el cajero usa "square" porque solo lee QR. Por defecto "wide". */
+  ratio?: 'wide' | 'square';
 };
 
 const focusRing =
@@ -15,13 +17,34 @@ const primaryButton = `min-h-[44px] rounded-button bg-ink px-4 text-base font-se
 const secondaryButton = `min-h-[44px] rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink motion-safe:transition-colors ${focusRing}`;
 const torchButton = `min-h-[44px] rounded-button bg-ink px-4 text-base font-semibold text-surface motion-safe:transition-colors ${focusRing}`;
 
+/** Ícono de cámara para el visor vacío (permiso pendiente o error). */
+function CameraIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-10 w-10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z" />
+      <circle cx="12" cy="12" r="3.5" />
+    </svg>
+  );
+}
+
 /** Visor reutilizable con marco guía, linterna y entrada manual (DESIGN §3). */
-export function Scanner({ onScan, formats }: ScannerProps) {
+export function Scanner({ onScan, formats, ratio = 'wide' }: ScannerProps) {
   const scanner = useScanner(onScan, formats);
   const [draft, setDraft] = useState('');
   const inputId = useId();
 
   const viewfinder = scanner.status === 'scanning' || scanner.status === 'read';
+  const aspectClass = ratio === 'square' ? 'aspect-square' : 'aspect-[4/3]';
+  const frameClass = ratio === 'square' ? 'h-3/4 w-3/4' : 'h-32 w-3/4';
 
   function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +56,11 @@ export function Scanner({ onScan, formats }: ScannerProps) {
 
   return (
     <section aria-label="Escáner de códigos" className="flex flex-col gap-3">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sheet bg-ink">
+      <div
+        className={`relative ${aspectClass} w-full overflow-hidden rounded-sheet border ${
+          viewfinder ? 'border-ink bg-ink' : 'border-line bg-paper'
+        }`}
+      >
         <video
           ref={scanner.videoRef}
           aria-hidden="true"
@@ -46,23 +73,25 @@ export function Scanner({ onScan, formats }: ScannerProps) {
         {viewfinder && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-button border-2 border-surface"
+            className={`pointer-events-none absolute left-1/2 top-1/2 ${frameClass} -translate-x-1/2 -translate-y-1/2 rounded-button border-2 border-surface`}
           />
         )}
 
         {scanner.status === 'requesting' && (
-          <p className="absolute inset-0 flex items-center justify-center p-6 text-center text-base text-surface">
-            Pidiendo permiso de cámara…
-          </p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-muted">
+            <CameraIcon />
+            <p className="text-base">Pidiendo permiso de cámara…</p>
+          </div>
         )}
 
         {scanner.status === 'error' && (
-          <p
+          <div
             role="alert"
-            className="absolute inset-0 flex items-center justify-center p-6 text-center text-base text-surface"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-cmr"
           >
-            {scanner.errorMessage}
-          </p>
+            <CameraIcon />
+            <p className="text-base">{scanner.errorMessage}</p>
+          </div>
         )}
       </div>
 

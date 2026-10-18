@@ -284,7 +284,7 @@ export function CashierHome() {
             </div>
           </form>
 
-          <Scanner onScan={(text) => void loadByCode(text)} formats={QR_SCAN_FORMATS} />
+          <Scanner onScan={(text) => void loadByCode(text)} formats={QR_SCAN_FORMATS} ratio="square" />
 
           {loading && (
             <p role="status" className="text-sm text-muted">

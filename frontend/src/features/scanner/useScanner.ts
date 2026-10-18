@@ -112,6 +112,10 @@ export function useScanner(
       updateStatus('requesting');
     }
     const startId = (startIdRef.current += 1);
+    // Nunca dos lectores a la vez: se libera la cámara anterior antes de pedirla otra vez.
+    const previous = controlsRef.current;
+    controlsRef.current = null;
+    stopCamera(previous);
 
     try {
       const controls = await startCamera(video, handleScanText, formats);
@@ -147,7 +151,11 @@ export function useScanner(
       };
     }
 
-    void startViewer();
+    // Se difiere un tick: en StrictMode el efecto se monta y desmonta de inmediato,
+    // así se cancela el primer arranque y solo queda uno, sin dos getUserMedia solapados.
+    const startTimer = setTimeout(() => {
+      void startViewer();
+    }, 0);
 
     const onVisibilityChange = () => {
       if (document.hidden) {
@@ -159,6 +167,7 @@ export function useScanner(
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
+      clearTimeout(startTimer);
       mountedRef.current = false;
       document.removeEventListener('visibilitychange', onVisibilityChange);
       stopViewer();
