@@ -1,8 +1,9 @@
+import { PencilIcon } from '../../components/Icons';
 import { StatusSwitch } from '../../components/StatusSwitch';
 import type { Category } from '../../types/category';
 
-const buttonClasses =
-  'min-h-[44px] rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50';
+const iconButtonClasses =
+  'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-button border border-line bg-surface text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50';
 
 type CategoryListProps = {
   categories: Category[];
@@ -54,9 +55,11 @@ export function CategoryList({ categories, busyId, onEdit, onAsk }: CategoryList
                     type="button"
                     onClick={() => onEdit(category)}
                     disabled={busy}
-                    className={buttonClasses}
+                    aria-label={`Editar ${category.name}`}
+                    title="Editar"
+                    className={iconButtonClasses}
                   >
-                    Editar
+                    <PencilIcon />
                   </button>
                 </td>
               </tr>

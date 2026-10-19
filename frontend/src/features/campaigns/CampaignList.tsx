@@ -1,11 +1,12 @@
+import { PencilIcon } from '../../components/Icons';
 import { StatusSwitch } from '../../components/StatusSwitch';
 import { formatMoney } from '../../lib/money';
 import { formatBps } from '../../lib/campaignValues';
 import type { Campaign } from '../../types/campaign';
 import { CAMPAIGN_STATUS_CLASSES, CAMPAIGN_STATUS_TEXT, SCOPE_TEXT } from './status';
 
-const buttonClasses =
-  'min-h-[44px] rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50';
+const iconButtonClasses =
+  'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-button border border-line bg-surface text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50';
 
 const MAX_NAMES_SHOWN = 3;
 
@@ -91,9 +92,11 @@ function CampaignListRow({
             type="button"
             onClick={() => onEdit(campaign)}
             disabled={busy}
-            className={buttonClasses}
+            aria-label={`Editar ${campaign.name}`}
+            title="Editar"
+            className={iconButtonClasses}
           >
-            Editar
+            <PencilIcon />
           </button>
         </div>
       </td>

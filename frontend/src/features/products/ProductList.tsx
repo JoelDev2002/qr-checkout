@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import { PencilIcon, StockAdjustIcon } from '../../components/Icons';
 import { StatusSwitch } from '../../components/StatusSwitch';
 import { formatBarcode, formatProductPrices, isLowStock } from '../../lib/productDisplay';
 import type { AdminProduct } from '../../types/product';
 
-const editLinkClasses =
-  'flex min-h-[44px] min-w-[44px] items-center rounded-button border border-line bg-surface px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
+const iconActionClasses =
+  'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-button border border-line bg-surface text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 
 type ProductListProps = {
   products: AdminProduct[];
@@ -65,16 +66,19 @@ function ProductTableRow({ product, busy, onAskToggle, onAskAdjust }: ProductRow
           <Link
             to={`/admin/products/${product.id}`}
             aria-label={`Editar ${product.name}`}
-            className={editLinkClasses}
+            title="Editar"
+            className={iconActionClasses}
           >
-            Editar
+            <PencilIcon />
           </Link>
           <button
             type="button"
             onClick={() => onAskAdjust(product)}
-            className={editLinkClasses}
+            aria-label={`Ajustar stock de ${product.name}`}
+            title="Ajustar stock"
+            className={iconActionClasses}
           >
-            Ajustar stock
+            <StockAdjustIcon />
           </button>
         </div>
       </td>
@@ -134,16 +138,19 @@ function ProductCard({ product, busy, onAskToggle, onAskAdjust }: ProductRowProp
         <Link
           to={`/admin/products/${product.id}`}
           aria-label={`Editar ${product.name}`}
-          className={editLinkClasses}
+          title="Editar"
+          className={iconActionClasses}
         >
-          Editar
+          <PencilIcon />
         </Link>
         <button
           type="button"
           onClick={() => onAskAdjust(product)}
-          className={editLinkClasses}
+          aria-label={`Ajustar stock de ${product.name}`}
+          title="Ajustar stock"
+          className={iconActionClasses}
         >
-          Ajustar stock
+          <StockAdjustIcon />
         </button>
       </div>
     </li>
