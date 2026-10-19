@@ -11,7 +11,7 @@ La imagen del producto es la etiqueta de precio de góndola, y el comprobante es
 **El elemento memorable es el `PriceTag`**: el bloque de precio que aparece igual en el escáner, el carrito y el cajero. El resto de la interfaz se mantiene sobria para que el precio destaque.
 
 Principios:
-1. El precio CMR es siempre lo más grande y lo único en rojo.
+1. El precio CMR es siempre lo más grande y va en rojo; el verde de la marca (`primary`) se usa solo como acento (franjas de las cabeceras e insignia CMR). El botón principal va en `button` con letra blanca.
 2. Un solo estilo de botón principal por pantalla.
 3. Nada se mueve sin que la persona lo pida, salvo la cuenta regresiva del QR.
 4. Los errores dicen qué pasó y qué hacer.
@@ -23,16 +23,21 @@ Principios:
 
 | Nombre | Hex | Uso |
 |---|---|---|
-| `ink` | `#172033` | Texto, botón principal, iconos |
-| `paper` | `#F4F5F7` | Fondo de la app |
+| `ink` | `#172033` | Texto, títulos e iconos |
+| `primary` | `#84B817` | Acento de marca: franjas de las cabeceras, insignia CMR e iconos |
+| `primary-hover` | `#6CA010` | Estados hover y activo del acento de marca |
+| `button` | `#343E49` | Botón principal y selección activa (letra blanca) |
+| `button-hover` | `#2A323B` | Estados hover y activo del botón principal |
+| `paper` | `#F8F8FA` | Fondo de la app |
+| `header` | `#FAFAFA` | Fondo de las cabeceras (cliente, cajero y admin) |
 | `surface` | `#FFFFFF` | Tarjetas, hojas inferiores, formularios |
 | `line` | `#D9DDE3` | Bordes y separadores |
-| `cmr` | `#D1243B` | Precio CMR, insignia CMR |
-| `saving` | `#16794F` | Ahorro, éxito, cobro confirmado |
+| `cmr` | `#D1243B` | Precio CMR, insignia de porcentaje, errores |
+| `saving` | `#84B817` | Ahorro, éxito, cobro confirmado (mismo verde de marca) |
 | `warn` | `#B26A00` | Avisos: poco stock, QR por vencer |
-| `muted` | `#5B6472` | Texto secundario, precio tachado |
+| `muted` | `#6B7280` | Texto secundario, precio tachado |
 
-Contraste: verificar que `cmr` sobre `surface` y `muted` sobre `paper` cumplan AA (4.5:1 en texto normal).
+Contraste: el texto usa `ink` o `muted` sobre `paper`/`surface`. El botón principal usa letra blanca sobre `button` (cumple AA). Las insignias con texto blanco sobre `primary` o `cmr` se aceptan por decisión de diseño (no cumplen AA). El verde `saving` como texto sobre blanco tampoco cumple AA (decisión de diseño).
 
 **Tipografía:** una sola familia, **Archivo** (`@fontsource-variable/archivo`), con pila de respaldo `system-ui, sans-serif`.
 - Cifras con `font-variant-numeric: tabular-nums` en todos los montos.
@@ -59,7 +64,7 @@ Contraste: verificar que `cmr` sobre `surface` y `muted` sobre `paper` cumplan A
 │ -58%                         │
 └──────────────────────────────┘
 ```
-La insignia "CMR" es un rectángulo de 2 px de radio, fondo `cmr`, texto blanco. El porcentaje se calcula contra el precio original. Si hay una campaña vigente, la etiqueta del segundo precio dice "Oferta" (si no, dice "Normal") y su nombre aparece debajo en `muted` (por ejemplo, "Campaña Dormitorio"). Los porcentajes se muestran redondeados a entero. Si el producto no tiene descuento CMR, se oculta la fila CMR y se muestra un solo precio.
+La insignia "CMR" es un rectángulo de 2 px de radio, fondo `primary` (verde de la marca), texto blanco. El porcentaje del descuento va en una insignia con fondo `cmr`, texto blanco, y se calcula contra el precio original. Si hay una campaña vigente, la etiqueta del segundo precio dice "Oferta" (si no, dice "Normal") y su nombre aparece debajo en `muted` (por ejemplo, "Campaña Dormitorio"). Los porcentajes se muestran redondeados a entero. Si el producto no tiene descuento CMR, se oculta la fila CMR y se muestra un solo precio.
 
 **`CartSummary`**: las mismas cuatro líneas de Falabella, más el ahorro.
 ```
@@ -190,7 +195,7 @@ Los resultados de una acción (guardar, activar, ajustar) aparecen como un aviso
 
 - Funciona bien desde 360 px de ancho.
 - Foco de teclado visible en todos los controles.
-- Los botones y campos tienen etiqueta de texto; los iconos solos llevan `aria-label`.
+- Los botones y campos tienen etiqueta de texto; los botones de solo icono llevan `aria-label` y `title` (tooltip al pasar el mouse).
 - Respetar `prefers-reduced-motion`.
 - No transmitir información solo con color (usar texto o icono junto a rojo y verde).
 - Montos con formato peruano: `S/ 1,889.00`.
