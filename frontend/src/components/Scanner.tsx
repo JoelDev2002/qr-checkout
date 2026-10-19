@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react';
 import type { BarcodeFormat } from '@zxing/browser';
+import { FlashlightIcon } from './Icons';
 import { useScanner } from '../features/scanner/useScanner';
 
 type ScannerProps = {
@@ -15,7 +16,6 @@ const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 const primaryButton = `min-h-[44px] rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover disabled:opacity-60 ${focusRing}`;
 const secondaryButton = `min-h-[44px] rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink motion-safe:transition-colors ${focusRing}`;
-const torchButton = `min-h-[44px] rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover motion-safe:transition-colors ${focusRing}`;
 
 /** Ícono de cámara para el visor vacío (permiso pendiente o error). */
 function CameraIcon() {
@@ -73,8 +73,23 @@ export function Scanner({ onScan, formats, ratio = 'wide' }: ScannerProps) {
         {viewfinder && (
           <div
             aria-hidden="true"
-            className={`pointer-events-none absolute left-1/2 top-1/2 ${frameClass} -translate-x-1/2 -translate-y-1/2 rounded-button border-2 border-surface`}
+            className={`pointer-events-none absolute left-1/2 top-1/2 ${frameClass} -translate-x-1/2 -translate-y-1/2 rounded-button border-2 border-surface shadow-[0_0_0_9999px_rgba(23,32,51,0.55)]`}
           />
+        )}
+
+        {viewfinder && scanner.canTorch && (
+          <button
+            type="button"
+            onClick={() => void scanner.toggleTorch()}
+            aria-pressed={scanner.torchOn}
+            aria-label={scanner.torchOn ? 'Apagar linterna' : 'Encender linterna'}
+            title={scanner.torchOn ? 'Apagar linterna' : 'Encender linterna'}
+            className={`absolute right-3 top-3 z-10 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full motion-safe:transition-colors ${
+              scanner.torchOn ? 'bg-primary text-surface' : 'bg-[rgba(23,32,51,0.7)] text-surface'
+            } ${focusRing}`}
+          >
+            <FlashlightIcon />
+          </button>
         )}
 
         {scanner.status === 'requesting' && (
@@ -96,17 +111,6 @@ export function Scanner({ onScan, formats, ratio = 'wide' }: ScannerProps) {
       </div>
 
       <div className="flex gap-2">
-        {scanner.canTorch && (
-          <button
-            type="button"
-            onClick={() => void scanner.toggleTorch()}
-            aria-pressed={scanner.torchOn}
-            className={scanner.torchOn ? torchButton : secondaryButton}
-          >
-            {scanner.torchOn ? 'Apagar linterna' : 'Linterna'}
-          </button>
-        )}
-
         <button
           type="button"
           onClick={scanner.manualOpen ? scanner.closeManual : scanner.openManual}

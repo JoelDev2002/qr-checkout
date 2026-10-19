@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { DiceIcon } from '../../components/Icons';
 import { Scanner } from '../../components/Scanner';
 import { generateInternalBarcode, isValidEan13 } from '../../lib/barcode';
 import { productResolver } from './resolver';
@@ -18,6 +19,9 @@ const buttonClasses =
   'min-h-[44px] rounded-button px-4 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
 
 const secondaryButton = `${buttonClasses} border border-line bg-surface text-ink`;
+
+const iconButtonClasses =
+  'mt-2 inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-button border border-line bg-surface text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
 
 type ProductFormProps = {
   mode: ProductFormMode;
@@ -82,7 +86,6 @@ export function ProductForm({
   onCancelDiscard,
   onAskAdjustStock,
 }: ProductFormProps) {
-  const [scannerOpen, setScannerOpen] = useState(false);
   const fieldsRef = useRef<CategoryField[]>([]);
   const resolver = useMemo(() => productResolver(() => fieldsRef.current, mode), [mode]);
   const form = useForm<ProductFormValues>({ resolver, defaultValues });
@@ -107,7 +110,6 @@ export function ProductForm({
 
   function handleScan(text: string) {
     setValue('barcode', text, { shouldValidate: true, shouldDirty: true });
-    setScannerOpen(false);
   }
 
   function handleGenerateInternal() {
@@ -169,26 +171,6 @@ export function ProductForm({
         <legend className="text-sm font-semibold text-ink">Código de barras</legend>
 
         {mode === 'create' && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setScannerOpen((open) => !open)}
-              aria-expanded={scannerOpen}
-              className={`${secondaryButton} flex-1`}
-            >
-              {scannerOpen ? 'Cerrar escáner' : 'Escanear código'}
-            </button>
-            <button
-              type="button"
-              onClick={handleGenerateInternal}
-              className={`${secondaryButton} flex-1`}
-            >
-              Generar código interno
-            </button>
-          </div>
-        )}
-
-        {scannerOpen && (
           <div className="mt-3 rounded-sheet border border-line bg-paper p-4">
             <Scanner onScan={handleScan} />
           </div>
@@ -197,17 +179,30 @@ export function ProductForm({
         <label htmlFor="product-barcode" className="mt-3 block text-sm font-semibold text-ink">
           Código
         </label>
-        <input
-          id="product-barcode"
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          {...register('barcode')}
-          readOnly={mode === 'edit'}
-          aria-readonly={mode === 'edit'}
-          aria-invalid={errors.barcode !== undefined}
-          className={inputClasses}
-        />
+        <div className="flex items-start gap-2">
+          <input
+            id="product-barcode"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            {...register('barcode')}
+            readOnly={mode === 'edit'}
+            aria-readonly={mode === 'edit'}
+            aria-invalid={errors.barcode !== undefined}
+            className={`${inputClasses} flex-1`}
+          />
+          {mode === 'create' && (
+            <button
+              type="button"
+              onClick={handleGenerateInternal}
+              aria-label="Generar código interno"
+              title="Generar código interno"
+              className={iconButtonClasses}
+            >
+              <DiceIcon />
+            </button>
+          )}
+        </div>
         {mode === 'edit' && (
           <p className="mt-1 text-sm text-muted">
             El código no se puede cambiar. El stock tampoco: cambia con ajustes.

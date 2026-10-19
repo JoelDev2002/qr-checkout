@@ -44,3 +44,48 @@ export function StockAdjustIcon({ className = 'h-5 w-5' }: IconProps) {
     </svg>
   );
 }
+
+/** Dado: generar un código aleatorio. */
+export function DiceIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="8" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="16" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="16" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Linterna: encender o apagar la luz del visor. */
+export function FlashlightIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="5" y="2" width="14" height="5" rx="1.5" />
+      <rect x="8" y="7" width="8" height="15" rx="1.5" />
+      <path d="M12 11v3" />
+    </svg>
+  );
+}
