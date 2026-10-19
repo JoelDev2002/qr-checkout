@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Receipt } from '../../components/Receipt';
+import { deliveryStatus } from '../../lib/delivery';
 import { ApiError } from '../../services/api';
 import { getPurchaseDetail } from '../../services/purchases';
 import type { PurchaseDetail, PurchaseDetailItem } from '../../types/purchases';
@@ -96,6 +97,9 @@ export default function HistoryDetailPage() {
 
       {detail !== null && (
         <div className="flex flex-col gap-3">
+          {detail.paymentMethod === 'ONLINE' && (
+            <p className="text-sm text-muted">En línea · {deliveryStatus(detail.deliveredAt)}</p>
+          )}
           <Receipt
             receiptNumber={detail.receiptNumber}
             code={detail.code}

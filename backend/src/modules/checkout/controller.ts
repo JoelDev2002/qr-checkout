@@ -1,8 +1,14 @@
 import type { Request, Response } from 'express';
 import type { ZodError, ZodIssue } from 'zod';
 import { ApiError } from '../../middlewares/errorHandler.js';
-import { cartCodeParamSchema, confirmCheckoutSchema } from './schemas.js';
-import { confirmCheckout, getCheckoutPreview, rejectCheckout, getSalesToday } from './service.js';
+import { cartCodeParamSchema, confirmCheckoutSchema, exitCodeParamSchema } from './schemas.js';
+import {
+  confirmCheckout,
+  getCheckoutPreview,
+  rejectCheckout,
+  getSalesToday,
+  verifyExit,
+} from './service.js';
 
 /** Los esquemas son estrictos: una clave desconocida se explica en español y no en el idioma de Zod. */
 function describeIssue(issue: ZodIssue): string {
@@ -53,4 +59,10 @@ export async function rejectCheckoutController(req: Request, res: Response): Pro
 export async function getSalesTodayController(req: Request, res: Response): Promise<void> {
   const result = await getSalesToday(actorUserId(req), new Date());
   res.json({ data: result });
+}
+
+export async function verifyExitController(req: Request, res: Response): Promise<void> {
+  const { code } = parse(exitCodeParamSchema.safeParse(req.params));
+
+  res.json({ data: await verifyExit(code, new Date()) });
 }

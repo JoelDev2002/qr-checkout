@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isValidCartCode } from '../../domain/cartCode.js';
+import { isValidCartCode, isValidExitCode } from '../../domain/cartCode.js';
 
 /** El cajero teclea el código como lo lea: en minúsculas o con espacios pegados (RN-05). */
 export function normalizeCartCode(value: string): string {
@@ -11,6 +11,14 @@ export const cartCodeParamSchema = z.object({
     .string({ required_error: 'El código del QR es obligatorio.' })
     .transform(normalizeCartCode)
     .refine(isValidCartCode, 'El código del QR no tiene el formato válido.'),
+});
+
+/** El código de salida `O-XXXXX` de una compra pagada en línea (RN-21, RN-23). */
+export const exitCodeParamSchema = z.object({
+  code: z
+    .string({ required_error: 'El código de salida es obligatorio.' })
+    .transform(normalizeCartCode)
+    .refine(isValidExitCode, 'El código de salida no tiene el formato válido.'),
 });
 
 export const BUYER_DOC_NUMBER_MAX_LENGTH = 20;
@@ -47,4 +55,5 @@ export const confirmCheckoutSchema = z
   .strict();
 
 export type CartCodeParams = z.infer<typeof cartCodeParamSchema>;
+export type ExitCodeParams = z.infer<typeof exitCodeParamSchema>;
 export type ConfirmCheckoutInput = z.infer<typeof confirmCheckoutSchema>;

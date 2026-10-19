@@ -46,6 +46,9 @@ export function CashierLayout() {
           <NavLink to="/cashier/today" className={linkClass}>
             Cobros de hoy
           </NavLink>
+          <NavLink to="/cashier/exit" className={linkClass}>
+            Verificar salida
+          </NavLink>
         </nav>
       </header>
 

@@ -75,6 +75,7 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'GET', path: '/api/checkout/:code', roles: CASHIER },
   { method: 'POST', path: '/api/checkout/:code/confirm', roles: CASHIER },
   { method: 'POST', path: '/api/checkout/:code/reject', roles: CASHIER },
+  { method: 'POST', path: '/api/checkout/exit/:code/verify', roles: CASHIER },
   { method: 'POST', path: '/api/payments/online', roles: CUSTOMER },
   { method: 'GET', path: '/api/dashboard/summary', roles: ADMIN },
 ];

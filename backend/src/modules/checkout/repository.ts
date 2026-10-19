@@ -121,6 +121,56 @@ export async function releaseCart(cartId: number): Promise<number> {
 }
 
 /** Un ├¡tem de la venta con los tres precios y el cobrado, para que el historial no cambie (RN-09). */
+/** La venta que el cajero verifica al salir: lo mínimo para reconocerla y saber si ya se entregó. */
+export type ExitSaleRecord = {
+  id: number;
+  code: string;
+  receiptNumber: string;
+  totalCents: number;
+  deliveredAt: Date | null;
+  customerName: string;
+};
+
+const exitSaleSelect = {
+  id: true,
+  code: true,
+  receiptNumber: true,
+  totalCents: true,
+  deliveredAt: true,
+  customer: { select: { name: true } },
+} satisfies Prisma.SaleSelect;
+
+/** Único lugar donde se busca una venta por su código de salida `O-XXXXX` (RN-21). */
+export async function findSaleByCode(code: string): Promise<ExitSaleRecord | null> {
+  const row = await prisma.sale.findUnique({ where: { code }, select: exitSaleSelect });
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    code: row.code,
+    receiptNumber: row.receiptNumber,
+    totalCents: row.totalCents,
+    deliveredAt: row.deliveredAt,
+    customerName: row.customer.name,
+  };
+}
+
+/**
+ * Marca la venta como entregada solo si todavía no lo estaba (RN-21). La condición evita que dos
+ * cajeros verifiquen a la vez la misma venta: el segundo no afecta ninguna fila.
+ */
+export async function markSaleDelivered(saleId: number, now: Date): Promise<number> {
+  const result = await prisma.sale.updateMany({
+    where: { id: saleId, deliveredAt: null },
+    data: { deliveredAt: now },
+  });
+
+  return result.count;
+}
+
 export type SaleItemRecord = {
   productId: number;
   barcode: string;

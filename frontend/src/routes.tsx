@@ -15,6 +15,7 @@ import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
+import { ExitVerification } from './pages/cashier/ExitVerification';
 import { TodaySales } from './pages/cashier/TodaySales';
 
 import HistoryPage from './pages/client/HistoryPage';
@@ -77,6 +78,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <CashierHome /> },
       { path: 'today', element: <TodaySales /> },
+      { path: 'exit', element: <ExitVerification /> },
     ],
   },
   // Página de prueba de humo del Brick, solo en desarrollo (T3.5a).

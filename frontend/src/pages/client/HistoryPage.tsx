@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Receipt } from '../../components/Receipt';
 import { formatDateLima } from '../../lib/date';
+import { deliveryStatus } from '../../lib/delivery';
 import { formatMoney } from '../../lib/money';
 import { paymentMethodLabel } from '../../lib/payment';
 import { ApiError } from '../../services/api';
@@ -177,7 +178,11 @@ export default function HistoryPage() {
                   <p className="text-base font-semibold tabular-nums text-ink">
                     {formatMoney(item.totalCents)}
                   </p>
-                  <p className="text-sm text-muted">{paymentMethodLabel(item.paymentMethod)}</p>
+                  <p className="text-sm text-muted">
+                    {item.paymentMethod === 'ONLINE'
+                      ? `En línea · ${deliveryStatus(item.deliveredAt)}`
+                      : paymentMethodLabel(item.paymentMethod)}
+                  </p>
                 </div>
               </button>
             </li>
@@ -246,6 +251,9 @@ export default function HistoryPage() {
 
               {detail !== null && selectedSummary !== null && (
                 <div className="flex flex-col gap-3">
+                  {detail.paymentMethod === 'ONLINE' && (
+                    <p className="text-sm text-muted">En línea · {deliveryStatus(detail.deliveredAt)}</p>
+                  )}
                   <Receipt
                     receiptNumber={detail.receiptNumber}
                     code={detail.code}

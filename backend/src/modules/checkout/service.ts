@@ -1,4 +1,5 @@
 import { isQrExpired, itemIssue, type ItemIssue } from '../../domain/cart.js';
+import { exitVerificationStatus } from '../../domain/exit.js';
 import { resolveCharge, type ChargedItem, type PriceType } from '../../domain/checkout.js';
 import { docSeriesOf, resolveBuyer, type Buyer, type DocType } from '../../domain/document.js';
 import { resolvePrices, summarizeCart, type Campaign, type CartSummary } from '../../domain/pricing.js';
@@ -8,7 +9,9 @@ import {
   ChargeConflict,
   createPaidSale,
   findCartByQrCode,
+  findSaleByCode,
   findSalesTodayForCashier,
+  markSaleDelivered,
   releaseCart,
   type CheckoutCartRecord,
   type CheckoutItemRecord,
@@ -46,6 +49,15 @@ export type CheckoutPreviewView = {
 export type CheckoutRejectView = {
   code: string;
   customerName: string;
+};
+
+/** Lo que ve el cajero cuando entrega una compra pagada en línea (RN-21). */
+export type ExitVerificationView = {
+  code: string;
+  receiptNumber: string;
+  customerName: string;
+  totalCents: number;
+  deliveredAt: string;
 };
 
 export type SaleItemView = {
@@ -86,6 +98,8 @@ const INVALID_CODE_MESSAGE = 'Código no válido o vencido';
 const ALREADY_PAID_MESSAGE = 'Este carrito ya fue cobrado.';
 const NOT_PENDING_MESSAGE = 'Este carrito ya no está esperando el cobro.';
 const QR_EXPIRED_MESSAGE = 'El QR ya venció. Pide al cliente que genere uno nuevo.';
+const EXIT_NOT_FOUND_MESSAGE = 'No encontramos ninguna compra con ese código de salida.';
+const ALREADY_DELIVERED_MESSAGE = 'Esta compra ya fue entregada.';
 
 async function requireChargeableCart(code: string, now: Date): Promise<ChargeableCart> {
   const cart = await findCartByQrCode(code);
@@ -289,4 +303,34 @@ export function toSaleItems(
 
 export async function getSalesToday(cashierId: number, now: Date): Promise<SalesTodayList> {
   return findSalesTodayForCashier(cashierId, now);
+}
+
+/**
+ * RN-21: el cajero verifica el código de salida `O-XXXXX` al salir. La primera verificación marca la
+ * venta como entregada (`deliveredAt`) y devuelve sus datos; una segunda responde `ALREADY_DELIVERED`.
+ * La marca se hace con una actualización condicionada para que no se entregue dos veces.
+ */
+export async function verifyExit(code: string, now: Date): Promise<ExitVerificationView> {
+  const sale = await findSaleByCode(code);
+
+  if (!sale) {
+    throw new ApiError(404, 'NOT_FOUND', EXIT_NOT_FOUND_MESSAGE);
+  }
+
+  if (exitVerificationStatus(sale.deliveredAt) === 'ALREADY_DELIVERED') {
+    throw new ApiError(409, 'ALREADY_DELIVERED', ALREADY_DELIVERED_MESSAGE);
+  }
+
+  const affected = await markSaleDelivered(sale.id, now);
+  if (affected === 0) {
+    throw new ApiError(409, 'ALREADY_DELIVERED', ALREADY_DELIVERED_MESSAGE);
+  }
+
+  return {
+    code: sale.code,
+    receiptNumber: sale.receiptNumber,
+    customerName: sale.customerName,
+    totalCents: sale.totalCents,
+    deliveredAt: now.toISOString(),
+  };
 }

@@ -86,6 +86,15 @@ export type CheckoutReject = {
   customerName: string;
 };
 
+/** Lo que devuelve POST /checkout/exit/:code/verify tras entregar una compra en línea (RN-21). */
+export type ExitVerification = {
+  code: string;
+  receiptNumber: string;
+  customerName: string;
+  totalCents: number;
+  deliveredAt: string;
+};
+
 export type SalesTodayItem = {
   code: string;
   receiptNumber: string;
@@ -119,6 +128,11 @@ export function confirmCheckout(code: string, body: ConfirmCheckoutBody): Promis
 /** POST /checkout/:code/reject: devuelve el carrito a OPEN para que el cliente lo edite (RN-06). */
 export function rejectCheckout(code: string): Promise<CheckoutReject> {
   return post<CheckoutReject>(`/checkout/${encodeURIComponent(code)}/reject`, {});
+}
+
+/** POST /checkout/exit/:code/verify: el cajero entrega la compra al verificar su código (RN-21). */
+export function verifyExit(code: string): Promise<ExitVerification> {
+  return post<ExitVerification>(`/checkout/exit/${encodeURIComponent(code)}/verify`, {});
 }
 
 /** GET /checkout/sales/today: cobros del día para el cajero que consulta. */

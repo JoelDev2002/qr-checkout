@@ -7,6 +7,7 @@ import {
   getCheckoutController,
   rejectCheckoutController,
   getSalesTodayController,
+  verifyExitController,
 } from './controller.js';
 
 export const CHECKOUT_RATE_LIMIT_MAX = 60;
@@ -20,6 +21,7 @@ export function createCheckoutRouter(): Router {
   const attemptLimiter = createUserRateLimiter(CHECKOUT_RATE_LIMIT_MAX, CHECKOUT_RATE_LIMIT_WINDOW_MS);
 
   router.get('/sales/today', authenticate, onlyCashier, asyncHandler(getSalesTodayController));
+  router.post('/exit/:code/verify', authenticate, onlyCashier, attemptLimiter, asyncHandler(verifyExitController));
   router.get('/:code', authenticate, onlyCashier, attemptLimiter, asyncHandler(getCheckoutController));
   router.post('/:code/confirm', authenticate, onlyCashier, attemptLimiter, asyncHandler(confirmCheckoutController));
   router.post('/:code/reject', authenticate, onlyCashier, attemptLimiter, asyncHandler(rejectCheckoutController));
