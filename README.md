@@ -4,6 +4,61 @@ QRCheckout es una web responsive para Saga Falabella Puruchuco (prototipo con da
 
 La interfaz está en español (Perú). Todos los montos se manejan como enteros en céntimos y los precios de oferta y CMR se calculan en el servidor.
 
+## Stack
+
+| Capa | Tecnologías |
+|---|---|
+| **Frontend** | React 19, Vite, TypeScript, Tailwind CSS 3, React Router 7, react-hook-form + Zod |
+| **Backend** | Node.js, Express 4, TypeScript, Prisma 6, Zod, JWT, bcrypt, Google Auth, Helmet |
+| **Base de datos** | MySQL 8 |
+| **Escáner y códigos** | `@zxing/browser` (lector), `qrcode.react` (QR) y `jsbarcode` (códigos de barras) |
+| **Pagos en línea** | Mercado Pago (Checkout API con Card Payment Brick) — opcional |
+| **Pruebas** | Vitest + Supertest (backend), Vitest + Testing Library (frontend) |
+
+## Roles y funcionalidades
+
+- **Cliente** (entra con Google): escanea los códigos de barras con la cámara, ve el precio normal y el precio con tarjeta CMR, arma y edita su carrito, muestra el QR `C-XXXXX` en caja o paga en línea con Mercado Pago y recibe su QR de salida `O-XXXXX`. Consulta su historial y sus comprobantes.
+- **Cajero** (correo y contraseña): escanea el QR del carrito y cobra (o lo rechaza para que el cliente lo edite), revisa los cobros del día y verifica el código de salida `O-XXXXX` para marcar la entrega.
+- **Administrador** (correo y contraseña): gestiona productos, categorías y sus campos, campañas y stock, crea usuarios cajeros y ve el resumen del panel.
+
+## Estructura del proyecto
+
+```
+qr-checkout/
+├─ frontend/             # React + Vite + TypeScript (web responsive)
+│  └─ src/
+│     ├─ pages/          # pantallas por rol (client, cashier, admin)
+│     ├─ features/       # lógica de cada módulo
+│     ├─ components/     # layouts, Scanner y componentes reutilizables
+│     ├─ services/       # llamadas a la API (api.ts, checkout.ts…)
+│     └─ lib/            # utilidades (money, date, delivery…)
+├─ backend/              # Express + Prisma + TypeScript
+│  ├─ src/
+│  │  ├─ domain/         # reglas de negocio puras (precios, códigos…)
+│  │  ├─ modules/        # rutas, controladores, servicios y repositorios
+│  │  ├─ infrastructure/ # Prisma, JWT, Google y Mercado Pago
+│  │  └─ server.ts
+│  └─ prisma/            # schema, migraciones y datos de ejemplo
+├─ docs/                 # producto, arquitectura, diseño, tareas y demo
+└─ package.json          # monorepo con los workspaces frontend y backend
+```
+
+## Estado del proyecto
+
+Prototipo con datos simulados de una sola tienda (Saga Falabella Puruchuco). Están fuera de alcance, por ahora, las imágenes de productos, la importación masiva desde la interfaz, el rol vendedor, las guías de entrada y salida, la garantía extendida, la facturación electrónica real y la integración con los sistemas reales de Saga. Las credenciales de pasarelas de pago son solo de prueba.
+
+## Documentación
+
+- [`docs/PRD.md`](docs/PRD.md): qué hace el producto y sus reglas de negocio.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): stack, carpetas, base de datos, API y flujo del cobro.
+- [`docs/DESIGN.md`](docs/DESIGN.md): tokens visuales, componentes y pantallas.
+- [`docs/TASKS.md`](docs/TASKS.md): tareas en orden y su estado.
+- [`docs/DEMO.md`](docs/DEMO.md): guion de demostración paso a paso.
+
+## Capturas
+
+_(Añade aquí capturas de las pantallas del cliente, del cajero y del administrador.)_
+
 ## Requisitos
 
 - **Node.js LTS** (con `npm`). No hace falta instalar Prisma ni Vite por separado: son dependencias del proyecto.
