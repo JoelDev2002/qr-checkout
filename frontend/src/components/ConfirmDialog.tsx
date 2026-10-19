@@ -41,7 +41,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={busy}
-          className={`${buttonClasses} bg-ink text-surface`}
+          className={`${buttonClasses} bg-button text-surface hover:bg-button-hover`}
         >
           {busy ? 'Guardando…' : confirmLabel}
         </button>

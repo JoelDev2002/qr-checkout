@@ -75,7 +75,7 @@ export function Home() {
     return (
       <main className="min-h-dvh bg-paper px-4 py-6">
         <div className="mx-auto max-w-sm rounded-sheet border border-line bg-surface p-6">
-          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
           <div className="mt-4">
             <BrandLogo className="h-14 w-auto" />
           </div>
@@ -94,7 +94,7 @@ export function Home() {
   return (
     <main className="min-h-dvh bg-paper px-4 py-6">
       <div className="mx-auto max-w-sm rounded-sheet border border-line bg-surface p-6">
-        <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+        <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
         <h1 className="mt-4 text-2xl font-bold text-ink">QRCheckout</h1>
         <p className="mt-2 text-base text-muted">Escanea, ve tu precio con CMR y paga rápido.</p>
 

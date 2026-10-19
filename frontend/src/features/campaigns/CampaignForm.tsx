@@ -313,7 +313,7 @@ export function CampaignForm({
         <button
           type="submit"
           disabled={submitting}
-          className={`${buttonClasses} bg-ink text-surface`}
+          className={`${buttonClasses} bg-button text-surface hover:bg-button-hover`}
         >
           {submitting ? 'Guardando…' : 'Guardar campaña'}
         </button>

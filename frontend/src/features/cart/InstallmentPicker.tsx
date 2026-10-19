@@ -6,7 +6,7 @@ import { defaultInstallmentCount } from './cartRules';
 const optionButtonClasses = (selected: boolean) =>
   `min-h-[44px] min-w-[44px] rounded-button border px-3 text-base font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
     selected
-      ? 'border-ink bg-ink text-surface'
+      ? 'border-button bg-button text-surface'
       : 'border-line bg-surface text-ink'
   }`;
 

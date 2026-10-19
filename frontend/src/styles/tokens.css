@@ -1,12 +1,17 @@
 :root {
   --color-ink: #172033;
-  --color-paper: #f4f5f7;
+  --color-paper: #f8f8fa;
   --color-surface: #ffffff;
   --color-line: #d9dde3;
   --color-cmr: #d1243b;
-  --color-saving: #16794f;
+  --color-saving: #84b817;
   --color-warn: #b26a00;
-  --color-muted: #5b6472;
+  --color-muted: #6b7280;
+  --color-primary: #84b817;
+  --color-primary-hover: #6ca010;
+  --color-button: #343e49;
+  --color-button-hover: #2a323b;
+  --color-header: #fafafa;
 
   --font-sans: 'Archivo Variable', system-ui, sans-serif;
 

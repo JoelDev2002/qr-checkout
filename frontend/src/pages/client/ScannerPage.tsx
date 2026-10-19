@@ -10,7 +10,7 @@ import { getProductByBarcode } from '../../services/scan';
 import type { ScannedProduct } from '../../types/product';
 
 const primaryButton =
-  'min-h-[44px] flex-1 rounded-button bg-ink px-4 text-base font-semibold text-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+  'min-h-[44px] flex-1 rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
 const secondaryButton =
   'min-h-[44px] flex-1 rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 

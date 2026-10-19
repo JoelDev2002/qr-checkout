@@ -257,7 +257,7 @@ export function StockAdjustmentModal({ product, onChanged, onClose }: StockAdjus
         <button
           type="submit"
           disabled={!formReady}
-          className={`${buttonClasses} mt-4 bg-ink text-surface`}
+          className={`${buttonClasses} mt-4 bg-button text-surface hover:bg-button-hover`}
         >
           {submitting ? 'Ajustando…' : 'Ajustar stock'}
         </button>

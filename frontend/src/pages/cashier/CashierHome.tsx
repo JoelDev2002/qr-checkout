@@ -26,7 +26,7 @@ import {
 const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 const buttonBase = `min-h-[44px] rounded-button px-4 text-base font-semibold disabled:opacity-60 ${focusRing}`;
-const primaryButton = `${buttonBase} bg-ink text-surface`;
+const primaryButton = `${buttonBase} bg-button text-surface hover:bg-button-hover`;
 const secondaryButton = `${buttonBase} border border-line bg-surface text-ink`;
 
 const DOC_OPTIONS: ReadonlyArray<{ value: CheckoutDocType; label: string }> = [
@@ -40,7 +40,7 @@ type OtherChoice = Exclude<CheckoutPaymentMethod, 'CMR_CARD'>;
 
 function selectedButton(selected: boolean): string {
   return `${buttonBase} border ${
-    selected ? 'border-ink bg-ink text-surface' : 'border-line bg-surface text-ink'
+    selected ? 'border-button bg-button text-surface' : 'border-line bg-surface text-ink'
   }`;
 }
 

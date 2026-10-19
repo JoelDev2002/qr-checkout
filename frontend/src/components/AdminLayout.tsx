@@ -19,7 +19,7 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-dvh bg-paper">
-      <header className="border-b border-line bg-surface">
+      <header className="border-b border-line bg-header">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <span className="flex items-center gap-2">
             <BrandLogo />
@@ -27,12 +27,12 @@ export function AdminLayout() {
           </span>
           <div className="flex items-center gap-3">
             {session !== null && (
-              <span className="hidden text-sm text-muted sm:inline">{session.user.name}</span>
+              <span className="hidden text-sm text-ink sm:inline">{session.user.name}</span>
             )}
             <button
               type="button"
               onClick={handleLogout}
-              className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               Cerrar sesión
             </button>

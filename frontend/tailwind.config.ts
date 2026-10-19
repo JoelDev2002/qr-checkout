@@ -12,6 +12,11 @@ export default {
       saving: 'var(--color-saving)',
       warn: 'var(--color-warn)',
       muted: 'var(--color-muted)',
+      primary: 'var(--color-primary)',
+      'primary-hover': 'var(--color-primary-hover)',
+      button: 'var(--color-button)',
+      'button-hover': 'var(--color-button-hover)',
+      header: 'var(--color-header)',
     },
     fontFamily: {
       sans: ['var(--font-sans)'],

@@ -48,14 +48,20 @@ export function PriceTag({
 
       {hasCmr && (
         <div className="mt-1 flex items-baseline justify-between gap-3">
-          <span className="rounded-tag bg-cmr px-1.5 py-0.5 text-sm font-semibold text-surface">
+          <span className="rounded-tag bg-primary px-1.5 py-0.5 text-sm font-semibold text-surface">
             CMR
           </span>
           <span className={`${cmrSize} font-bold text-cmr`}>{formatMoney(cmrCents)}</span>
         </div>
       )}
 
-      {percent !== null && <p className="text-sm font-semibold text-ink">{percent}</p>}
+      {percent !== null && (
+        <p className="mt-1">
+          <span className="inline-block rounded-tag bg-cmr px-1.5 py-0.5 text-sm font-semibold text-surface">
+            {percent}
+          </span>
+        </p>
+      )}
     </section>
   );
 }

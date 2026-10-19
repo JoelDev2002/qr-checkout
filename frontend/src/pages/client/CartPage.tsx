@@ -10,7 +10,7 @@ import { createQuantityDebouncer, type QuantityDebouncer } from '../../features/
 import type { CartItem } from '../../services/cart';
 
 const primaryButton =
-  'flex min-h-[44px] w-full items-center justify-center rounded-button bg-ink px-4 text-base font-semibold text-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
+  'flex min-h-[44px] w-full items-center justify-center rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
 const secondaryButton =
   'flex min-h-[44px] w-full items-center justify-center rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60';
 

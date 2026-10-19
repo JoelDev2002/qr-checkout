@@ -117,7 +117,7 @@ export function CampaignFormPage() {
     <div>
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
           <h1 className="mt-3 text-2xl font-bold text-ink">
             {editingId === null ? 'Nueva campaña' : 'Editar campaña'}
           </h1>

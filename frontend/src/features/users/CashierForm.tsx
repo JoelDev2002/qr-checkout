@@ -88,7 +88,7 @@ export function CashierForm({ onSubmit, onCancel, submitting, submitError }: Cas
       </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        <button type="submit" disabled={submitting} className={`${buttonClasses} bg-ink text-surface`}>
+        <button type="submit" disabled={submitting} className={`${buttonClasses} bg-button text-surface hover:bg-button-hover`}>
           {submitting ? 'Guardando…' : 'Crear cajero'}
         </button>
         <button

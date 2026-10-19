@@ -71,14 +71,14 @@ export function Categories() {
     <div>
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div>
-          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+          <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
           <h1 className="mt-3 text-2xl font-bold text-ink">Categorías</h1>
         </div>
       </header>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink">Categorías existentes</h2>
-        <Link to="/admin/categories/new" className={`${buttonClasses} bg-ink text-surface`}>
+        <Link to="/admin/categories/new" className={`${buttonClasses} bg-button text-surface hover:bg-button-hover`}>
           Nueva categoría
         </Link>
       </div>

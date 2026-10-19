@@ -13,9 +13,9 @@ type ScannerProps = {
 
 const focusRing =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
-const primaryButton = `min-h-[44px] rounded-button bg-ink px-4 text-base font-semibold text-surface disabled:opacity-60 ${focusRing}`;
+const primaryButton = `min-h-[44px] rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover disabled:opacity-60 ${focusRing}`;
 const secondaryButton = `min-h-[44px] rounded-button border border-line bg-surface px-4 text-base font-semibold text-ink motion-safe:transition-colors ${focusRing}`;
-const torchButton = `min-h-[44px] rounded-button bg-ink px-4 text-base font-semibold text-surface motion-safe:transition-colors ${focusRing}`;
+const torchButton = `min-h-[44px] rounded-button bg-button px-4 text-base font-semibold text-surface hover:bg-button-hover motion-safe:transition-colors ${focusRing}`;
 
 /** Ícono de cámara para el visor vacío (permiso pendiente o error). */
 function CameraIcon() {

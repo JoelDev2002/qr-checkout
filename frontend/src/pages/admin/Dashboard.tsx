@@ -21,7 +21,7 @@ import {
 const focusRing = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink';
 const buttonClasses = `min-h-[44px] rounded-button px-4 text-base font-semibold disabled:opacity-50 ${focusRing}`;
 const secondaryButton = `${buttonClasses} border border-line bg-surface text-ink`;
-const primaryButton = `${buttonClasses} bg-ink text-surface`;
+const primaryButton = `${buttonClasses} bg-button text-surface hover:bg-button-hover`;
 const fieldClasses = `min-h-[44px] rounded-button border border-line bg-surface px-3 py-2 text-base text-ink ${focusRing}`;
 
 const RANGE_DAYS_OPTIONS = [7, 30, 90];
@@ -128,7 +128,7 @@ export function Dashboard() {
     <div>
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
           <div>
-            <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+            <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
             <h1 className="mt-3 text-2xl font-bold text-ink">Panel</h1>
             {data !== null && (
               <p className="mt-1 text-base text-muted">
@@ -246,7 +246,7 @@ export function Dashboard() {
                     {data.salesByDay.map((day) => (
                       <div key={day.date} className="flex h-full min-w-0 flex-1 items-end">
                         <div
-                          className="w-full rounded-t bg-cmr"
+                          className="w-full rounded-t bg-primary"
                           style={{ height: `${Math.max(barHeight(day.totalCents, maxDayTotal), 2)}%` }}
                           title={`${formatDayLabel(day.date)} · ${formatMoney(day.totalCents)}`}
                         />

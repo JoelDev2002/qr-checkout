@@ -27,7 +27,7 @@ export function RoleWorkspace({ title, name, role, children }: RoleWorkspaceProp
   return (
     <main className="min-h-dvh bg-paper px-4 py-6">
       <div className="mx-auto max-w-sm rounded-sheet border border-line bg-surface p-6">
-        <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-cmr" />
+        <span aria-hidden="true" className="block h-1 w-10 rounded-tag bg-primary" />
         <h1 className="mt-4 text-2xl font-bold text-ink">{title}</h1>
 
         <p className="mt-6 text-base text-ink">{name}</p>

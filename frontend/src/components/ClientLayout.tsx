@@ -6,7 +6,7 @@ import { clearSession, readSession } from '../lib/session';
 
 const headerLinkClass = ({ isActive }: { isActive: boolean }): string =>
   `flex min-h-[44px] items-center whitespace-nowrap rounded-button px-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-    isActive ? 'bg-ink text-surface' : 'text-muted'
+    isActive ? 'bg-ink text-surface' : 'text-ink'
   }`;
 
 /** Marco del cliente: cabecera, contenido y barra inferior con el resumen del carrito (DESIGN §4). */
@@ -22,7 +22,7 @@ export function ClientLayout() {
 
   return (
     <div className="min-h-dvh bg-paper pb-28">
-      <header className="border-b border-line bg-surface">
+      <header className="border-b border-line bg-header">
         <div className="mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3">
           <Link
             to="/"
@@ -40,7 +40,7 @@ export function ClientLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              className="min-h-[44px] rounded-button px-3 text-sm font-semibold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               Cerrar sesión
             </button>
