@@ -8,7 +8,7 @@
     "start": "tsx src/server.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "mp:payment-methods": "tsx scripts/mp-payment-methods.ts",
     "payments:reconcile": "tsx scripts/payments-reconcile.ts",
