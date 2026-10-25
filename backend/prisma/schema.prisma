@@ -66,6 +66,34 @@ enum PaymentAttemptStatus {
   UNKNOWN
 }
 
+enum PurchaseOrderStatus {
+  REGISTERED
+  APPROVED
+  RECEIVED
+  CANCELLED
+}
+
+enum GoodsIssueReason {
+  TRANSFER
+  SUPPLIER_RETURN
+  SHRINKAGE
+}
+
+enum InventoryCountStatus {
+  OPEN
+  CLOSED
+}
+
+enum BackupType {
+  BACKUP
+  RESTORE
+}
+
+enum BackupStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id            Int               @id @default(autoincrement())
   email         String            @unique
@@ -81,6 +109,12 @@ model User {
   adjustments   StockAdjustment[]
   scans         ProductScan[]
   paymentAttempts PaymentAttempt[]
+  purchaseOrdersCreated  PurchaseOrder[]  @relation("PurchaseOrderCreatedBy")
+  purchaseOrdersApproved PurchaseOrder[]  @relation("PurchaseOrderApprovedBy")
+  goodsReceipts          GoodsReceipt[]
+  goodsIssues            GoodsIssue[]
+  inventoryCounts        InventoryCount[]
+  backupRecords          BackupRecord[]
 }
 
 model Category {
@@ -155,6 +189,7 @@ model Product {
   attributes         Json? // valores de los campos de su categoría, por key
   campaigns          CampaignProduct[]
   stock              Int               @default(0)
+  minStock           Int               @default(5) // bajo este stock se sugiere reponer (órdenes de compra)
   maxPerPurchase     Int               @default(10)
   imageUrl           String?
   active             Boolean           @default(true)
@@ -164,6 +199,10 @@ model Product {
   saleItems          SaleItem[]
   adjustments        StockAdjustment[]
   scans              ProductScan[]
+  purchaseOrderItems PurchaseOrderItem[]
+  goodsReceiptItems  GoodsReceiptItem[]
+  goodsIssueItems    GoodsIssueItem[]
+  inventoryItems     InventoryCountItem[]
 }
 
 model StockAdjustment {
@@ -281,4 +320,146 @@ model ProductScan {
 
   @@index([productId, createdAt])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Compras y almacén (épicas Gestionar compras y Gestionar almacén).
+// Los números correlativos (OC01-000001, GE01-000001, GS01-000001, IN01-000001)
+// se asignan con DocumentSeries, igual que los comprobantes de venta.
+// ---------------------------------------------------------------------------
+
+/** Proveedor de la tienda. No se borra: se desactiva. */
+model Supplier {
+  id             Int             @id @default(autoincrement())
+  ruc            String          @unique @db.Char(11)
+  businessName   String
+  contactName    String?
+  phone          String?
+  email          String?
+  address        String?
+  active         Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  purchaseOrders PurchaseOrder[]
+}
+
+/** Orden de compra a un proveedor. El total lo calcula el servidor. */
+model PurchaseOrder {
+  id           Int                 @id @default(autoincrement())
+  number       String              @unique // OC01-000001
+  supplierId   Int
+  supplier     Supplier            @relation(fields: [supplierId], references: [id])
+  status       PurchaseOrderStatus @default(REGISTERED)
+  totalCents   Int
+  notes        String?
+  createdById  Int
+  createdBy    User                @relation("PurchaseOrderCreatedBy", fields: [createdById], references: [id])
+  approvedById Int?
+  approvedBy   User?               @relation("PurchaseOrderApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  items        PurchaseOrderItem[]
+  receipts     GoodsReceipt[]
+
+  @@index([supplierId, createdAt])
+}
+
+model PurchaseOrderItem {
+  id              Int           @id @default(autoincrement())
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       Int
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitCostCents   Int
+  subtotalCents   Int // unitCostCents × quantity
+
+  @@unique([purchaseOrderId, productId])
+}
+
+/** Guía de entrada: mercadería recibida de una orden de compra aprobada. Suma al stock. */
+model GoodsReceipt {
+  id              Int                @id @default(autoincrement())
+  number          String             @unique // GE01-000001
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
+  userId          Int
+  user            User               @relation(fields: [userId], references: [id])
+  notes           String?
+  createdAt       DateTime           @default(now())
+  items           GoodsReceiptItem[]
+}
+
+model GoodsReceiptItem {
+  id             Int          @id @default(autoincrement())
+  goodsReceiptId Int
+  goodsReceipt   GoodsReceipt @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  productId      Int
+  product        Product      @relation(fields: [productId], references: [id])
+  quantity       Int
+
+  @@unique([goodsReceiptId, productId])
+}
+
+/** Guía de salida: mercadería que sale sin venta. Resta del stock y nunca lo deja negativo. */
+model GoodsIssue {
+  id        Int              @id @default(autoincrement())
+  number    String           @unique // GS01-000001
+  reason    GoodsIssueReason
+  notes     String?
+  userId    Int
+  user      User             @relation(fields: [userId], references: [id])
+  createdAt DateTime         @default(now())
+  items     GoodsIssueItem[]
+}
+
+model GoodsIssueItem {
+  id           Int        @id @default(autoincrement())
+  goodsIssueId Int
+  goodsIssue   GoodsIssue @relation(fields: [goodsIssueId], references: [id], onDelete: Cascade)
+  productId    Int
+  product      Product    @relation(fields: [productId], references: [id])
+  quantity     Int
+
+  @@unique([goodsIssueId, productId])
+}
+
+/** Inventario físico: al cerrarlo, cada diferencia genera un StockAdjustment con motivo. */
+model InventoryCount {
+  id          Int                  @id @default(autoincrement())
+  number      String               @unique // IN01-000001
+  status      InventoryCountStatus @default(OPEN)
+  notes       String?
+  createdById Int
+  createdBy   User                 @relation(fields: [createdById], references: [id])
+  closedAt    DateTime?
+  createdAt   DateTime             @default(now())
+  items       InventoryCountItem[]
+}
+
+model InventoryCountItem {
+  id               Int            @id @default(autoincrement())
+  inventoryCountId Int
+  inventoryCount   InventoryCount @relation(fields: [inventoryCountId], references: [id], onDelete: Cascade)
+  productId        Int
+  product          Product        @relation(fields: [productId], references: [id])
+  systemStock      Int // stock del sistema al momento del conteo
+  countedStock     Int
+  difference       Int // countedStock − systemStock
+
+  @@unique([inventoryCountId, productId])
+}
+
+/** Registro de cada backup y restauración de la base de datos (épica Gestionar seguridad). */
+model BackupRecord {
+  id        Int          @id @default(autoincrement())
+  type      BackupType
+  fileName  String
+  sizeBytes Int?
+  status    BackupStatus
+  detail    String?
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
 }

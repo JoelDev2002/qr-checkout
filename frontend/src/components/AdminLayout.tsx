@@ -58,6 +58,9 @@ export function AdminLayout() {
           <NavLink to="/admin/users" className={linkClass}>
             Cajeros
           </NavLink>
+          <NavLink to="/admin/suppliers" className={linkClass}>
+            Proveedores
+          </NavLink>
         </nav>
       </header>
 

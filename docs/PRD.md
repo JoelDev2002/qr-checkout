@@ -54,9 +54,16 @@ No existe registro público para cajero ni admin.
 - Pago en línea con Mercado Pago en modo pruebas, siempre por el total de oferta (RN-20).
 - Código de salida (`O-XXXXX`) para verificar la entrega de las compras pagadas en línea (RN-21).
 
+### Ampliación del curso: compras, almacén y seguridad (Sprint 4)
+El proyecto registrado en el curso es un *Sistema de Gestión de Ventas, Compras y Almacén*, y el docente pidió las épicas Gestionar compras, Gestionar almacén, Gestionar seguridad y Generar dashboard. Por eso se agregan, después del MVP de ventas:
+- Proveedores (RUC válido y único), órdenes de compra y guías de entrada que suman al stock.
+- Guías de salida (traslado, devolución al proveedor, merma) que nunca dejan el stock en negativo, e inventario físico con diferencias que generan ajustes de stock.
+- Roles de compras y almacén, backup y restauración de la base de datos.
+- Dashboards de compras y de almacén.
+
 ### Fuera del MVP
 - Integración con el sistema o la base de datos real de Saga.
-- Guías de entrada y salida, compras a proveedores, garantía extendida.
+- Garantía extendida.
 - Facturación electrónica real (SUNAT). Se deja la estructura lista.
 - Imágenes de productos (el campo existe, pero no se usa todavía).
 - Importación masiva desde la interfaz.

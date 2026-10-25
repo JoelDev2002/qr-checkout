@@ -45,7 +45,7 @@ qr-checkout/
 
 ## Estado del proyecto
 
-Prototipo con datos simulados de una sola tienda (Saga Falabella Puruchuco). Están fuera de alcance, por ahora, las imágenes de productos, la importación masiva desde la interfaz, el rol vendedor, las guías de entrada y salida, la garantía extendida, la facturación electrónica real y la integración con los sistemas reales de Saga. Las credenciales de pasarelas de pago son solo de prueba.
+Prototipo con datos simulados de una sola tienda (Saga Falabella Puruchuco). Compras y almacén (proveedores, órdenes de compra, guías de entrada y salida, inventario) y el backup de la base de datos se están agregando en el Sprint 4 (`docs/TASKS.md`). Están fuera de alcance, por ahora, las imágenes de productos, la importación masiva desde la interfaz, el rol vendedor, la garantía extendida, la facturación electrónica real y la integración con los sistemas reales de Saga. Las credenciales de pasarelas de pago son solo de prueba.
 
 ## Documentación
 
