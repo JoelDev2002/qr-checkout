@@ -13,6 +13,7 @@ import { createDashboardRouter } from './modules/dashboard/routes.js';
 import { createPaymentsRouter, type PaymentsRouterOptions } from './modules/payments/routes.js';
 import { createProductsRouter } from './modules/products/routes.js';
 import { createPurchasesRouter } from './modules/purchases/routes.js';
+import { createSuppliersRouter } from './modules/suppliers/routes.js';
 import { createUsersRouter } from './modules/users/routes.js';
 
 export type CreateAppOptions = {
@@ -65,6 +66,7 @@ export function createApp(options: CreateAppOptions = {}) {
   app.use('/api/campaigns', createCampaignsRouter());
   app.use('/api/products', createProductsRouter());
   app.use('/api/users', createUsersRouter());
+  app.use('/api/suppliers', createSuppliersRouter());
   app.use('/api/cart', createCartsRouter());
   app.use('/api/purchases', createPurchasesRouter());
   app.use('/api/checkout', createCheckoutRouter());

@@ -13,6 +13,7 @@ import { CategoryFormPage } from './pages/admin/CategoryForm';
 import { Dashboard } from './pages/admin/Dashboard';
 import { ProductFormPage } from './pages/admin/ProductForm';
 import { Products } from './pages/admin/Products';
+import { Suppliers } from './pages/admin/Suppliers';
 import { Login } from './pages/auth/Login';
 import { CashierHome } from './pages/cashier/CashierHome';
 import { ExitVerification } from './pages/cashier/ExitVerification';
@@ -66,6 +67,7 @@ export const routes: RouteObject[] = [
       { path: 'campaigns/new', element: <CampaignFormPage /> },
       { path: 'campaigns/:id', element: <CampaignFormPage /> },
       { path: 'users', element: <Cashiers /> },
+      { path: 'suppliers', element: <Suppliers /> },
     ],
   },
   {

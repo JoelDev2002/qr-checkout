@@ -110,9 +110,34 @@ Cómo usar este archivo:
 - [ ] **T3.6 Verificación de salida.** Pantalla del cliente con el QR de salida (`O-XXXXX`) tras un pago aprobado, y en la pantalla del cajero un campo y escáner para verificar el código (`POST /checkout/exit/:code/verify`) y marcar `deliveredAt`. En el historial del cliente se ve "Por entregar" o "Entregado".
   *Hecho cuando:* el segundo intento de verificar la misma venta responde "Ya entregado".
 
+## Sprint 4 — Compras, almacén y seguridad (épicas del curso)
+
+Ver `PRD.md` §5 (Ampliación del curso) y `ARCHITECTURE.md` §5.1. Entre paréntesis, la historia del Product Backlog de Jira.
+
+- [x] **T4.1 Esquema de compras, almacén y backup** (PB01). Modelos `Supplier`, `PurchaseOrder`, `GoodsReceipt`, `GoodsIssue`, `InventoryCount` (con sus ítems), `BackupRecord` y `Product.minStock`, con la migración `20261025120000_purchasing_warehouse`.
+  *Hecho cuando:* `npx prisma validate` pasa y la migración se aplica sobre las anteriores sin errores.
+- [x] **T4.2 API de proveedores** (PB16). Módulo `suppliers`: listar con búsqueda y filtro de estado, ver, crear, editar (sin cambiar el RUC) y activar o desactivar. `domain/ruc.ts` valida largo, prefijo y dígito verificador.
+  *Hecho cuando:* pruebas cubren RUC inválido, RUC duplicado (409), edición sin RUC, búsqueda, desactivación y permisos por rol (`tests/modules/suppliers.test.ts`, `tests/domain/ruc.test.ts`).
+- [ ] **T4.3 Admin: proveedores** (PB16). Pantalla `/admin/suppliers` con lista, búsqueda, formulario de alta y edición (RUC bloqueado al editar) e interruptor activo/inactivo con confirmación. *(Hecha; falta probarla a mano.)*
+  *Hecho cuando:* se crea, edita, busca y desactiva un proveedor desde la pantalla, y un RUC mal escrito o repetido muestra su mensaje.
+- [ ] **T4.4 Roles de compras y almacén** (PB22). Agregar `PURCHASING` y `WAREHOUSE` a `Role` (migración), a `AuthRole` y a los roles con contraseña; el admin crea estas cuentas; layouts y rutas del frontend para cada rol. Proveedores y órdenes pasan a `ADMIN` y `PURCHASING`; guías e inventario a `ADMIN` y `WAREHOUSE`.
+  *Hecho cuando:* cada rol entra a su pantalla, no abre las de otro rol, y la matriz de `tests/securityRoutes.test.ts` refleja los permisos.
+- [ ] **T4.5 Órdenes de compra** (PB17). API y pantalla: proveedor activo, productos con cantidad y costo unitario (céntimos), total calculado en el servidor, número `OC01-000001`, aprobar y anular; sugerir productos con `stock < minStock`.
+  *Hecho cuando:* pruebas cubren total, correlativo, transiciones válidas e inválidas de estado y proveedor inactivo.
+- [ ] **T4.6 Guías de entrada** (PB19). API y pantalla: desde una orden `APPROVED`, cantidades recibidas, número `GE01-000001`; en una transacción suma al stock y pasa la orden a `RECEIVED`.
+  *Hecho cuando:* el stock sube exactamente lo recibido y una orden no aprobada o ya recibida se rechaza.
+- [ ] **T4.7 Guías de salida** (PB20). API y pantalla: motivo, productos y cantidades, número `GS01-000001`; resta stock con actualización condicionada.
+  *Hecho cuando:* una salida mayor al stock se rechaza sin cambiar nada (hay prueba).
+- [ ] **T4.8 Inventario físico** (PB21). API y pantalla: abrir conteo (copia el stock del sistema), registrar conteos, cerrar; al cerrar, cada diferencia crea un `StockAdjustment` con motivo "Inventario IN01-…".
+  *Hecho cuando:* tras cerrar, el stock de cada producto es igual a lo contado y quedan los ajustes registrados.
+- [ ] **T4.9 Backup y restauración** (PB23, PB24). Admin: generar backup (archivo con fecha y hora) y restaurar desde uno del historial con confirmación; cada operación queda en `BackupRecord`.
+  *Hecho cuando:* se restaura un backup en la base de pruebas y los datos coinciden.
+- [ ] **T4.10 Dashboards de compras y de almacén** (PB26, PB27). Compras por proveedor y mes, órdenes por estado; entradas y salidas por día y productos bajo `minStock`.
+  *Hecho cuando:* los números coinciden con datos de prueba.
+
 ## Después del MVP (no hacer todavía)
 
-Imágenes de productos, importación masiva en la interfaz, rol vendedor, descuento regular propio por producto, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas de Saga.
+Imágenes de productos, importación masiva en la interfaz, rol vendedor, descuento regular propio por producto, garantía extendida, facturación electrónica real, integración con los sistemas de Saga.
 
 - Reimprimir el comprobante de una venta pasada desde "Cobros de hoy": requiere que GET /checkout/sales/today incluya el id de cada venta y una ruta de detalle para el cajero (por ejemplo GET /checkout/sales/:saleId).
 

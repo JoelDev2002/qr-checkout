@@ -333,6 +333,21 @@ model ProductScan {
 }
 ```
 
+### 5.1 Compras, almacén y backup (Sprint 4, épicas del curso)
+
+Se agregan en la migración `20261025120000_purchasing_warehouse`. Los números correlativos usan `DocumentSeries` con las series `OC01` (orden de compra), `GE01` (guía de entrada), `GS01` (guía de salida) e `IN01` (inventario), con el mismo formato `SERIE-000001` de los comprobantes. El detalle completo está en `backend/prisma/schema.prisma` y el diagrama EER de las 25 tablas en [`docs/diagrama-eer.png`](diagrama-eer.png).
+
+| Modelo | Para qué | Reglas |
+|---|---|---|
+| `Supplier` | Proveedores | RUC de 11 dígitos único y con dígito verificador válido (`domain/ruc.ts`); se desactivan, no se borran |
+| `PurchaseOrder` + `PurchaseOrderItem` | Órdenes de compra | Estados `REGISTERED → APPROVED → RECEIVED` o `CANCELLED`; costos en céntimos; el total lo calcula el servidor |
+| `GoodsReceipt` + `GoodsReceiptItem` | Guías de entrada | Siempre desde una orden aprobada; suman al stock dentro de una transacción |
+| `GoodsIssue` + `GoodsIssueItem` | Guías de salida | Motivo `TRANSFER`, `SUPPLIER_RETURN` o `SHRINKAGE`; restan stock con actualización condicionada (nunca negativo) |
+| `InventoryCount` + `InventoryCountItem` | Inventario físico | Guarda stock del sistema, conteo y diferencia; al cerrarlo, cada diferencia crea un `StockAdjustment` con motivo |
+| `BackupRecord` | Backups y restauraciones | Quién, cuándo, archivo, tamaño y resultado |
+
+`Product` suma `minStock` (por defecto 5): bajo ese stock el producto se sugiere al crear una orden de compra y aparece en el dashboard de almacén.
+
 Esto es una referencia: ajustar nombres y detalles al implementar, sin cambiar las reglas del PRD.
 
 ## 6. API
@@ -367,6 +382,8 @@ Formato de respuesta: `{ "data": ... }` en éxito y `{ "error": { "code": "...",
 | POST `/checkout/:code/reject` | cajero | Rechaza el carrito |
 | GET `/checkout/sales/today` | cajero | Cobros del día |
 | GET, POST, PATCH `/users` | admin | Gestión de cajeros |
+| GET `/suppliers` (`?search=`, `?active=`), GET `/suppliers/:id` | admin | Proveedores ordenados por razón social; la búsqueda filtra por razón social o RUC |
+| POST `/suppliers`, PUT `/suppliers/:id`, PATCH `/suppliers/:id/active` | admin | Crear, editar (el RUC no cambia) y activar o desactivar proveedores; RUC duplicado responde `CONFLICT` |
 | GET `/dashboard/summary` | admin | Métricas por rango de fechas |
 | POST `/payments/online` | cliente | Cobra con Mercado Pago siempre el total de oferta y crea la venta (sección 7) |
 | POST `/checkout/exit/:code/verify` | cajero | Opcional: verifica el código de salida `O-XXXXX` y marca la venta como entregada |

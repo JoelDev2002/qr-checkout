@@ -74,7 +74,8 @@ Stack: React + Vite + TypeScript + Tailwind (frontend), Express + TypeScript + P
 - En PowerShell NO existen head, tail, cat, wc, grep ni sed. Usa Get-Content, Select-Object -First o -Last, Select-String y Measure-Object. Si un comando falla porque no existe, no lo repitas con otra forma de Linux.
 
 ## Fuera de alcance por ahora
-Imágenes de productos, importación masiva desde la interfaz, rol vendedor, guías de entrada y salida, garantía extendida, facturación electrónica real, integración con los sistemas reales de Saga.
+Imágenes de productos, importación masiva desde la interfaz, rol vendedor, garantía extendida, facturación electrónica real, integración con los sistemas reales de Saga.
+Compras y almacén (proveedores, órdenes de compra, guías de entrada y salida, inventario) y backup/restauración entran en el Sprint 4 de `docs/TASKS.md` (ver `ARCHITECTURE.md` §5.1).
 
 ## Cierre de tarea (aplica a TODA tarea)
 1. Mientras trabajas corre solo los archivos de prueba que toques. Al final corre la suite completa UNA vez y la comprobación de tipos (npx tsc --noEmit) en los paquetes que cambiaste. Todo debe pasar. Si hay pruebas en rojo que no son tuyas, detente y dime cuáles, sin cambiarlas.
